@@ -1,91 +1,85 @@
 <!DOCTYPE html>
-<html>
+<html lang="tr">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Bozkurt Ordusu Satranç</title>
-
-<style>
-body{
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  height:100vh;
-  background:#111;
-}
-
-.board{
-  display:grid;
-  grid-template-columns:repeat(8,60px);
-  grid-template-rows:repeat(8,60px);
-}
-
-.square{
-  width:60px;
-  height:60px;
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  font-size:38px;
-  cursor:pointer;
-}
-
-.light{ background:#f0d9b5; }
-.dark{ background:#b58863; }
-
-.selected{
-  outline:3px solid red;
-}
-</style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Bozkurt Ordusu Satranç</title>
+  <style>
+    body{
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      height:100vh;
+      background:#111;
+      margin:0;
+    }
+    .board{
+      display:grid;
+      grid-template-columns:repeat(8,60px);
+      grid-template-rows:repeat(8,60px);
+      user-select:none;
+    }
+    .square{
+      width:60px;
+      height:60px;
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      font-size:38px;
+      cursor:pointer;
+    }
+    .light{ background:#f0d9b5; }
+    .dark{ background:#b58863; }
+    .selected{ outline:3px solid red; }
+  </style>
 </head>
-
 <body>
+  <div class="board" id="board"></div>
 
-<div class="board" id="board"></div>
+  <script>
+    const board = document.getElementById("board");
 
-<script>
-const pieces = [
-  "♜","♞","♝","♛","♚","♝","♞","♜",
-  "♟","♟","♟","♟","♟","♟","♟","♟",
-  "","","","","","","","",
-  "","","","","","","","",
-  "","","","","","","","",
-  "","","","","","","","",
-  "♙","♙","♙","♙","♙","♙","♙","♙",
-  "♖","♘","♗","♕","♔","♗","♘","♖"
-];
+    const start = [
+      "♜","♞","♝","♛","♚","♝","♞","♜",
+      "♟","♟","♟","♟","♟","♟","♟","♟",
+      "","","","","","","","",
+      "","","","","","","","",
+      "","","","","","","","",
+      "","","","","","","","",
+      "♙","♙","♙","♙","♙","♙","♙","♙",
+      "♖","♘","♗","♕","♔","♗","♘","♖"
+    ];
 
-const board = document.getElementById("board");
-let selected = null;
+    let selected = null;
 
-pieces.forEach((piece,i)=>{
-  const square = document.createElement("div");
-  square.classList.add("square");
-  
-  if((Math.floor(i/8)+i)%2==0){
-    square.classList.add("light");
-  }else{
-    square.classList.add("dark");
-  }
+    function draw(){
+      board.innerHTML = "";
+      for(let i=0;i<64;i++){
+        const sq = document.createElement("div");
+        sq.className = "square " + (((Math.floor(i/8)+i)%2===0) ? "light":"dark");
+        sq.textContent = start[i];
 
-  square.textContent = piece;
+        sq.addEventListener("click", ()=>{
+          // seçim yoksa ve karede taş varsa seç
+          if(selected === null && sq.textContent !== ""){
+            selected = sq;
+            sq.classList.add("selected");
+            return;
+          }
+          // seçim varsa: taşı taşı
+          if(selected){
+            sq.textContent = selected.textContent;
+            selected.textContent = "";
+            selected.classList.remove("selected");
+            selected = null;
+          }
+        });
 
-  square.addEventListener("click",()=>{
-    if(selected===null && square.textContent!==""){
-      selected = square;
-      square.classList.add("selected");
+        board.appendChild(sq);
+      }
     }
-    else if(selected){
-      square.textContent = selected.textContent;
-      selected.textContent = "";
-      selected.classList.remove("selected");
-      selected = null;
-    }
-  });
 
-  board.appendChild(square);
-});
-</script>
-
+    draw();
+  </script>
 </body>
 </html>

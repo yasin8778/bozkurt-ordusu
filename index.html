@@ -1,375 +1,661 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="tr">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Bozkurt Ordusu Satranç</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <title>Bozkurt Ordusu — Satranç</title>
 
-  <!-- Chessboard.js (tahta) -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/chessboard-js/1.0.0/chessboard-1.0.0.min.css" />
+  <!-- Chess rules + move generation -->
+  <script src="https://cdn.jsdelivr.net/npm/chess.js@1.0.0-beta.8/dist/chess.min.js"></script>
 
   <style>
     :root{
-      --bg:#0f1115;
-      --panel:#151824;
-      --text:#e8e8e8;
-      --muted:#a7adbb;
-      --btn:#2b6cff;
-      --btn2:#2a2f45;
+      --bg:#0b0f1a;
+      --card:#121a2b;
+      --card2:#0f1626;
+      --text:#e8eefc;
+      --muted:#9fb0d7;
+      --a:#2f6bff;
+      --good:#31c48d;
+      --bad:#ff5a5f;
+      --sq1:#f0d9b5;
+      --sq2:#b58863;
+      --hi: rgba(47,107,255,.35);
+      --sel: rgba(255,255,255,.35);
+      --br: 22px;
     }
+    *{box-sizing:border-box}
     body{
-      margin:0;
-      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial;
-      background: var(--bg);
-      color: var(--text);
-      display:flex;
-      justify-content:center;
-      padding: 14px;
-    }
-    .wrap{
-      width: min(520px, 100%);
-      display:flex;
-      flex-direction:column;
-      gap:12px;
-    }
-    .top{
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-      background: var(--panel);
-      border-radius:14px;
-      padding:12px 12px;
-      gap:10px;
-    }
-    .title{
-      display:flex;
-      flex-direction:column;
-      gap:2px;
-      min-width: 0;
-    }
-    .title b{ font-size:16px; }
-    .title span{ font-size:12px; color:var(--muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
-    .btns{
-      display:flex;
-      gap:8px;
-      align-items:center;
-      flex-wrap:wrap;
-      justify-content:flex-end;
-    }
-    button, select{
-      appearance:none;
-      border:0;
-      border-radius:12px;
-      padding:10px 12px;
+      margin:0; min-height:100vh;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      background: radial-gradient(1200px 800px at 20% 10%, #162246 0%, var(--bg) 60%);
       color:var(--text);
-      background: var(--btn2);
-      font-weight:600;
+      display:flex; justify-content:center; padding:16px;
+    }
+    .wrap{width:min(980px, 100%); display:grid; gap:14px;}
+    .top{
+      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+      border:1px solid rgba(255,255,255,.08);
+      border-radius: var(--br);
+      padding:14px;
+      display:flex; gap:12px; align-items:center; justify-content:space-between;
+    }
+    .brand{display:flex; flex-direction:column; gap:4px}
+    .brand .t{font-weight:800; font-size:18px; letter-spacing:.2px}
+    .brand .s{color:var(--muted); font-size:12px}
+    .controls{display:flex; gap:10px; flex-wrap:wrap; align-items:center; justify-content:flex-end}
+    .btn{
+      border:1px solid rgba(255,255,255,.12);
+      background: rgba(255,255,255,.06);
+      color:var(--text);
+      padding:10px 12px;
+      border-radius: 14px;
+      font-weight:700;
       cursor:pointer;
-      font-size:14px;
+      user-select:none;
+      -webkit-tap-highlight-color: transparent;
     }
-    button.primary{ background: var(--btn); }
-    select{ font-weight:700; }
-    .boardCard{
-      background: var(--panel);
-      border-radius:18px;
-      padding:12px;
-    }
-    #board{
-      width: 100%;
-      max-width: 496px;
-      margin: 0 auto;
+    .btn.primary{background: rgba(47,107,255,.22); border-color: rgba(47,107,255,.45)}
+    .btn:active{transform: translateY(1px)}
+    select{
+      background: rgba(255,255,255,.06);
+      color:var(--text);
+      border:1px solid rgba(255,255,255,.12);
+      padding:10px 12px;
       border-radius:14px;
+      font-weight:700;
+      outline:none;
+    }
+
+    .grid{
+      display:grid;
+      gap:14px;
+      grid-template-columns: 1fr;
+    }
+    @media(min-width: 860px){
+      .grid{grid-template-columns: 1.2fr .8fr;}
+    }
+
+    .card{
+      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+      border:1px solid rgba(255,255,255,.08);
+      border-radius: var(--br);
+      padding:14px;
       overflow:hidden;
     }
-    .status{
-      background: var(--panel);
-      border-radius:14px;
-      padding:12px;
-      font-size:13px;
-      line-height:1.35;
-      color: var(--muted);
+
+    .boardWrap{
+      display:flex; justify-content:center; align-items:center;
+      padding:10px;
     }
-    .status b{ color: var(--text); }
-    .row{
-      display:flex;
-      gap:8px;
-      flex-wrap:wrap;
-      margin-top:8px;
+    .board{
+      width: min(92vw, 520px);
+      aspect-ratio: 1 / 1;
+      border-radius: 18px;
+      overflow:hidden;
+      display:grid;
+      grid-template-columns: repeat(8, 1fr);
+      box-shadow: 0 18px 40px rgba(0,0,0,.35);
+      touch-action: manipulation;
+      user-select:none;
     }
+    .sq{
+      display:flex; align-items:center; justify-content:center;
+      font-size: clamp(26px, 6vw, 42px);
+      line-height:1;
+      cursor:pointer;
+      position:relative;
+    }
+    .light{background:var(--sq1)}
+    .dark{background:var(--sq2)}
+    .sq.sel::after{
+      content:"";
+      position:absolute; inset:0;
+      background: var(--sel);
+    }
+    .sq.hi::after{
+      content:"";
+      position:absolute; inset:0;
+      background: var(--hi);
+    }
+    .sq.dot::before{
+      content:"";
+      position:absolute;
+      width:22%;
+      height:22%;
+      border-radius:999px;
+      background: rgba(0,0,0,.28);
+    }
+    .sq.cap::before{
+      content:"";
+      position:absolute;
+      width:78%;
+      height:78%;
+      border-radius:999px;
+      border: 3px solid rgba(0,0,0,.30);
+      background: rgba(0,0,0,.06);
+    }
+
+    .panelTitle{
+      display:flex; align-items:center; justify-content:space-between;
+      gap:10px; margin-bottom:10px;
+    }
+    .panelTitle .h{
+      font-weight:900; letter-spacing:.2px;
+    }
+    .pillRow{display:flex; gap:8px; flex-wrap:wrap}
     .pill{
-      background:#0f1322;
-      border:1px solid #232845;
-      color:var(--muted);
       padding:8px 10px;
       border-radius:999px;
-      font-size:12px;
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(255,255,255,.05);
+      color: var(--muted);
       font-weight:700;
+      font-size:12px;
+    }
+    .pill b{color:var(--text)}
+    .log{
+      background: rgba(0,0,0,.18);
+      border:1px solid rgba(255,255,255,.08);
+      border-radius: 16px;
+      padding:10px;
+      min-height: 160px;
+      max-height: 280px;
+      overflow:auto;
+      font-size: 13px;
+      color: var(--text);
+    }
+    .log .m{color:var(--muted)}
+    .row{display:flex; gap:10px; flex-wrap:wrap; margin-top:10px}
+    .mini{
+      flex:1;
+      min-width: 150px;
+      background: rgba(0,0,0,.14);
+      border:1px solid rgba(255,255,255,.08);
+      border-radius: 16px;
+      padding:10px;
+    }
+    .mini .k{color:var(--muted); font-size:12px; font-weight:800}
+    .mini .v{margin-top:4px; font-weight:900}
+    .status{
+      margin-top:10px;
+      color: var(--muted);
+      font-weight:700;
+      font-size: 12px;
+    }
+    .hint{
+      margin-top:10px;
+      color: rgba(232,238,252,.85);
+      font-size: 12px;
+      line-height: 1.35;
+    }
+    .warn{
+      color:#ffd8a8;
     }
   </style>
 </head>
-
 <body>
   <div class="wrap">
     <div class="top">
-      <div class="title">
-        <b>Bozkurt Ordusu</b>
-        <span>Motor: Stockfish • Kurallar: chess.js</span>
+      <div class="brand">
+        <div class="t">Bozkurt Ordusu</div>
+        <div class="s">Kurallı satranç + motorlu AI + Koç (Komutan) + Analist</div>
       </div>
-
-      <div class="btns">
-        <select id="skill">
-          <option value="3">AI: Kolay</option>
-          <option value="8" selected>AI: Orta</option>
-          <option value="15">AI: Zor</option>
-          <option value="20">AI: Usta</option>
+      <div class="controls">
+        <select id="level">
+          <option value="easy">AI: Kolay</option>
+          <option value="medium">AI: Orta</option>
+          <option value="hard">AI: Zor</option>
         </select>
-        <button id="flipBtn">Tahtayı Çevir</button>
-        <button class="primary" id="resetBtn">Yeniden Başlat</button>
+        <button class="btn" id="flip">Tahtayı Çevir</button>
+        <button class="btn primary" id="reset">Yeniden Başlat</button>
       </div>
     </div>
 
-    <div class="boardCard">
-      <div id="board"></div>
-    </div>
+    <div class="grid">
+      <div class="card">
+        <div class="boardWrap">
+          <div class="board" id="board" aria-label="Satranç Tahtası"></div>
+        </div>
+        <div class="status" id="netStatus">Durum: Hazır</div>
+        <div class="hint">
+          Dokunma: Taş seç → hedef kareye dokun. Kurallara aykırı hamleye izin vermez.<br/>
+          <span class="warn">Not:</span> AI için internet gerekir (Lichess bulut motoru). İnternet yoksa sadece 2 kişilik oynarsın.
+        </div>
+      </div>
 
-    <div class="status" id="status">
-      <b>Durum:</b> Yükleniyor...
-      <div class="row">
-        <div class="pill" id="turnPill">Sıra: -</div>
-        <div class="pill" id="enginePill">Motor: -</div>
-        <div class="pill" id="evalPill">Değerlendirme: -</div>
+      <div class="card">
+        <div class="panelTitle">
+          <div class="h">Komutan & Analist</div>
+          <div class="pillRow">
+            <div class="pill">Sıra: <b id="turnP">-</b></div>
+            <div class="pill">Motor: <b id="engineP">-</b></div>
+            <div class="pill">Değerlendirme: <b id="evalP">-</b></div>
+          </div>
+        </div>
+
+        <div class="log" id="log"></div>
+
+        <div class="row">
+          <div class="mini">
+            <div class="k">Komutan (Koç)</div>
+            <div class="v" id="coach">Hazır.</div>
+          </div>
+          <div class="mini">
+            <div class="k">Analist</div>
+            <div class="v" id="analyst">Hamle bekleniyor.</div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
 
-  <!-- Gerekli kütüphaneler -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.4/jquery.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.13.4/chess.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/chessboard-js/1.0.0/chessboard-1.0.0.min.js"></script>
+<script>
+(() => {
+  // ======================
+  //  Helpers / constants
+  // ======================
+  const PIECE_UNI = {
+    p:"♟", r:"♜", n:"♞", b:"♝", q:"♛", k:"♚",
+    P:"♙", R:"♖", N:"♘", B:"♗", Q:"♕", K:"♔"
+  };
 
-  <!-- Stockfish (Web Worker gibi çalışır) -->
-  <script src="https://cdn.jsdelivr.net/npm/stockfish@16.0.0/src/stockfish.js"></script>
+  // Simple opening name guesses from first moves (lightweight)
+  // NOTE: not exhaustive - just common ones.
+  const OPENINGS = [
+    { moves: ["e4","e5","Nf3","Nc6"], name:"Açık Oyun (Open Game)" },
+    { moves: ["e4","c5"], name:"Sicilya Savunması" },
+    { moves: ["e4","e6"], name:"Fransız Savunması" },
+    { moves: ["e4","c6"], name:"Caro-Kann Savunması" },
+    { moves: ["d4","d5","c4"], name:"Vezir Gambiti" },
+    { moves: ["d4","Nf6","c4","g6"], name:"Kral Hint Savunması" },
+    { moves: ["d4","Nf6","c4","e6"], name:"Nimzo/Hint Yapıları" },
+    { moves: ["c4"], name:"İngiliz Açılışı" },
+    { moves: ["Nf3"], name:"Réti Açılışı" }
+  ];
 
-  <script>
-    // ====== OYUN + TAHTA ======
-    const game = new Chess();
-    let board = null;
+  const LEVELS = {
+    easy:   { thinkMs: 200, depthHint: 8 },
+    medium: { thinkMs: 400, depthHint: 12 },
+    hard:   { thinkMs: 700, depthHint: 16 }
+  };
 
-    // ====== MOTOR ======
-    let engine = null;
-    let engineReady = false;
-    let thinking = false;
-    let lastEval = null;
+  // Lichess cloud eval endpoint (works without auth)
+  // Docs: https://lichess.org/api#operation/apiCloudEval
+  const CLOUD_EVAL_URL = "https://lichess.org/api/cloud-eval";
 
-    const statusEl = document.getElementById("status");
-    const turnPill = document.getElementById("turnPill");
-    const enginePill = document.getElementById("enginePill");
-    const evalPill = document.getElementById("evalPill");
-    const skillSel = document.getElementById("skill");
+  // ======================
+  //  UI Elements
+  // ======================
+  const boardEl = document.getElementById("board");
+  const logEl = document.getElementById("log");
+  const turnP = document.getElementById("turnP");
+  const engineP = document.getElementById("engineP");
+  const evalP = document.getElementById("evalP");
+  const coachEl = document.getElementById("coach");
+  const analystEl = document.getElementById("analyst");
+  const netStatus = document.getElementById("netStatus");
 
-    function uiStatus(text){
-      statusEl.firstChild.textContent = "";
-      statusEl.innerHTML = `<b>Durum:</b> ${text}
-        <div class="row">
-          <div class="pill" id="turnPill">Sıra: ${game.turn()==="w" ? "Beyaz" : "Siyah"}</div>
-          <div class="pill" id="enginePill">Motor: ${engineReady ? "Hazır" : "Hazırlanıyor"}</div>
-          <div class="pill" id="evalPill">Değerlendirme: ${lastEval ?? "-"}</div>
-        </div>`;
-    }
+  const levelSel = document.getElementById("level");
+  const resetBtn = document.getElementById("reset");
+  const flipBtn = document.getElementById("flip");
 
-    function initBoard(){
-      const cfg = {
-        draggable: true,
-        position: "start",
-        pieceTheme: "https://cdnjs.cloudflare.com/ajax/libs/chessboard-js/1.0.0/img/chesspieces/wikipedia/{piece}.png",
-        onDragStart,
-        onDrop,
-        onSnapEnd
-      };
-      board = Chessboard("board", cfg);
-      window.addEventListener("resize", () => board.resize());
-      uiStatus("Hazır. Taşları sürükleyerek oyna.");
-    }
+  // ======================
+  //  Game State
+  // ======================
+  const game = new Chess(); // chess.js enforces rules
+  let flipped = false;      // false: white bottom, true: black bottom
+  let selected = null;      // selected square like "e2"
+  let legalTargets = [];    // squares
+  let aiEnabled = true;     // AI plays black by default
+  let aiThinking = false;
 
-    function onDragStart(source, piece){
-      if (thinking) return false; // motor düşünürken hamle yok
-      if (game.game_over()) return false;
-
-      // sadece sıradaki renk oynasın
-      if (game.turn() === "w" && piece.startsWith("b")) return false;
-      if (game.turn() === "b" && piece.startsWith("w")) return false;
-
-      // mobilde yanlış sürüklemeleri azaltmak için:
-      return true;
-    }
-
-    function onDrop(source, target){
-      // terfi varsa otomatik vezir
-      const moveObj = { from: source, to: target, promotion: "q" };
-      const move = game.move(moveObj);
-
-      if (move === null) return "snapback"; // illegal hamle
-
-      updateBoardAndState("Sen oynadın: " + move.san);
-
-      // oyuncu hamlesinden sonra AI oynasın
-      setTimeout(makeAIMove, 80);
-    }
-
-    function onSnapEnd(){
-      board.position(game.fen());
-    }
-
-    function updateBoardAndState(msg){
-      board.position(game.fen(), false);
-      uiStatus(msg + (game.in_check() ? " • ŞAH!" : ""));
-      if (game.game_over()){
-        let end = "Oyun bitti.";
-        if (game.in_checkmate()) end = "ŞAH MAT!";
-        else if (game.in_stalemate()) end = "PAT (Berabere).";
-        else if (game.in_draw()) end = "Berabere.";
-        uiStatus(msg + " • " + end);
+  // ======================
+  //  Rendering
+  // ======================
+  function coordToSquare(file, rank){
+    return "abcdefgh"[file] + "12345678"[rank];
+  }
+  function squareToCoord(sq){
+    const file = "abcdefgh".indexOf(sq[0]);
+    const rank = "12345678".indexOf(sq[1]);
+    return {file, rank};
+  }
+  function getDisplayOrder(){
+    // Board is 8x8. We render squares in display order.
+    // Default: a8..h8 down to a1..h1
+    // Flipped: h1..a1 up to h8..a8
+    const squares = [];
+    if(!flipped){
+      for(let r=7; r>=0; r--){
+        for(let f=0; f<8; f++){
+          squares.push(coordToSquare(f, r));
+        }
+      }
+    } else {
+      for(let r=0; r<8; r++){
+        for(let f=7; f>=0; f--){
+          squares.push(coordToSquare(f, r));
+        }
       }
     }
+    return squares;
+  }
 
-    // ====== STOCKFISH KURULUM ======
-    function initEngine(){
-      try{
-        engine = STOCKFISH(); // stockfish.js global fonksiyon
-      }catch(e){
-        uiStatus("Motor yüklenemedi. İnternet/CDN erişimi kontrol et.");
-        console.error(e);
+  function pieceAt(sq){
+    const p = game.get(sq);
+    if(!p) return null;
+    const key = (p.color === "w" ? p.type.toUpperCase() : p.type);
+    return PIECE_UNI[key];
+  }
+
+  function clearHighlights(){
+    selected = null;
+    legalTargets = [];
+  }
+
+  function render(){
+    boardEl.innerHTML = "";
+    const order = getDisplayOrder();
+
+    order.forEach((sq) => {
+      const {file, rank} = squareToCoord(sq);
+      const isLight = (file + rank) % 2 === 0;
+      const d = document.createElement("div");
+      d.className = "sq " + (isLight ? "light" : "dark");
+      d.dataset.sq = sq;
+
+      const pc = pieceAt(sq);
+      if(pc) d.textContent = pc;
+
+      if(selected === sq) d.classList.add("sel");
+      if(legalTargets.includes(sq)) {
+        d.classList.add("hi");
+        // mark capture vs quiet move
+        if(game.get(sq)) d.classList.add("cap");
+        else d.classList.add("dot");
+      }
+
+      d.addEventListener("click", onSquareTap, {passive:true});
+      boardEl.appendChild(d);
+    });
+
+    turnP.textContent = (game.turn() === "w") ? "Beyaz" : "Siyah";
+
+    if(game.isCheckmate()){
+      addLog(`🏁 Mat! Kazanan: ${game.turn()==="w" ? "Siyah" : "Beyaz"}`);
+    } else if(game.isStalemate()){
+      addLog("🤝 Pat! Berabere.");
+    } else if(game.isDraw()){
+      addLog("🤝 Berabere (kural gereği).");
+    } else if(game.isCheck()){
+      addLog("⚠️ Şah!");
+    }
+  }
+
+  // ======================
+  //  Logging + Coach/Analyst
+  // ======================
+  function addLog(txt){
+    const p = document.createElement("div");
+    p.textContent = txt;
+    logEl.appendChild(p);
+    logEl.scrollTop = logEl.scrollHeight;
+  }
+
+  function setCoach(text){ coachEl.textContent = text; }
+  function setAnalyst(text){ analystEl.textContent = text; }
+
+  function openingNameFromHistory(){
+    const moves = game.history(); // SAN array
+    // Use SAN stripped of annotations (+,#,!,?)
+    const plain = moves.map(m => m.replace(/[+#?!]/g,""));
+    for(const o of OPENINGS){
+      let ok = true;
+      for(let i=0;i<o.moves.length;i++){
+        if(!plain[i] || plain[i] !== o.moves[i]) { ok=false; break; }
+      }
+      if(ok) return o.name;
+    }
+    return null;
+  }
+
+  function coachCommentAfterMove(){
+    const name = openingNameFromHistory();
+    if(name && game.history().length <= 6){
+      setCoach(`📜 Açılış: ${name}. Plan: gelişim + merkez kontrolü + şah güvenliği.`);
+      return;
+    }
+
+    // Generic coaching by phase
+    const ply = game.history().length;
+    if(ply <= 10){
+      setCoach("🛡️ Komutan: Taşlarını geliştir, merkezi tut (e4/d4), erken vezir çıkarmamaya çalış.");
+    } else if(ply <= 30){
+      setCoach("⚔️ Komutan: Zayıf piyonları hedefle, aktif taşlarını artır, taktik fırsatlarını ara.");
+    } else {
+      setCoach("🏹 Komutan: Son oyun: piyon sürüşleri, aktif şah, serbest piyon yaratma öncelik.");
+    }
+  }
+
+  // ======================
+  //  Move handling (rules are enforced by chess.js)
+  // ======================
+  function legalMovesFrom(sq){
+    // verbose moves from square
+    return game.moves({square: sq, verbose: true});
+  }
+
+  function onSquareTap(e){
+    if(aiThinking) return;
+    const sq = e.currentTarget.dataset.sq;
+
+    // If selecting
+    if(!selected){
+      const p = game.get(sq);
+      if(!p) return;
+
+      // Only allow moving side to move
+      if(p.color !== game.turn()) return;
+
+      selected = sq;
+      const moves = legalMovesFrom(sq);
+      legalTargets = moves.map(m => m.to);
+      render();
+      return;
+    }
+
+    // If tapping same square => deselect
+    if(selected === sq){
+      clearHighlights();
+      render();
+      return;
+    }
+
+    // Attempt move
+    if(!legalTargets.includes(sq)){
+      // If clicked another own piece -> switch selection
+      const p = game.get(sq);
+      if(p && p.color === game.turn()){
+        selected = sq;
+        const moves = legalMovesFrom(sq);
+        legalTargets = moves.map(m => m.to);
+        render();
         return;
       }
-
-      engine.onmessage = (line) => {
-        const text = typeof line === "string" ? line : (line?.data || "");
-        // console.log("SF:", text);
-
-        if (text === "uciok") {
-          engine.postMessage("isready");
-          return;
-        }
-
-        if (text === "readyok") {
-          engineReady = true;
-          applySkill();
-          uiStatus("Motor hazır. Oynamaya başla.");
-          // ilk konum değerlendirmesi
-          requestEval();
-          return;
-        }
-
-        if (text.startsWith("info")) {
-          // Basit eval yakalama (cp veya mate)
-          // örnek: info depth 12 score cp 34 ...
-          const mCp = text.match(/score cp (-?\d+)/);
-          const mMate = text.match(/score mate (-?\d+)/);
-          if (mMate) lastEval = `#${mMate[1]}`;
-          else if (mCp) {
-            const cp = parseInt(mCp[1], 10);
-            // cp -> piyon birimi (100cp=1.00)
-            lastEval = (cp/100).toFixed(2);
-          }
-          // UI’ı çok sık güncellememek için:
-          // ama yine de kullanıcı görsün:
-          // (oyun sırasında anlık değişebilir)
-          // uiStatus("Motor düşünüyor...");
-          return;
-        }
-
-        if (text.startsWith("bestmove")) {
-          const parts = text.split(" ");
-          const best = parts[1]; // e2e4 gibi
-          if (!best || best === "(none)") {
-            thinking = false;
-            updateBoardAndState("Motor hamle bulamadı.");
-            return;
-          }
-
-          const from = best.substring(0,2);
-          const to = best.substring(2,4);
-          let promo = best.length >= 5 ? best[4] : null;
-
-          const move = game.move({
-            from, to,
-            promotion: promo ? promo : "q"
-          });
-
-          thinking = false;
-
-          if (move) {
-            updateBoardAndState("Motor oynadı: " + move.san);
-            requestEval();
-          } else {
-            updateBoardAndState("Motor geçersiz hamle üretti (nadir).");
-          }
-          return;
-        }
-      };
-
-      engine.postMessage("uci");
-      uiStatus("Motor hazırlanıyor...");
+      // else ignore
+      return;
     }
 
-    function applySkill(){
-      if (!engineReady) return;
-      const skill = parseInt(skillSel.value, 10);
-      // skill level 0-20
-      engine.postMessage(`setoption name Skill Level value ${skill}`);
-      // hareketleri biraz daha insancıl yap (isteğe bağlı)
-      engine.postMessage(`setoption name Move Overhead value 50`);
+    // Promotion handling (simple: auto-queen)
+    const from = selected;
+    const to = sq;
+    const moveObj = { from, to };
+
+    // if pawn to last rank
+    const piece = game.get(from);
+    if(piece && piece.type === "p"){
+      const toRank = to[1];
+      if((piece.color==="w" && toRank==="8") || (piece.color==="b" && toRank==="1")){
+        moveObj.promotion = "q";
+      }
     }
 
-    skillSel.addEventListener("change", () => {
-      applySkill();
-      requestEval();
-    });
-
-    // ====== AI HAMLESİ ======
-    function makeAIMove(){
-      if (!engineReady) { uiStatus("Motor hazır değil."); return; }
-      if (game.game_over()) return;
-      if (thinking) return;
-
-      // AI her zaman sıradaki oyuncu için oynar.
-      thinking = true;
-      uiStatus("Motor düşünüyor...");
-
-      engine.postMessage("ucinewgame");
-      engine.postMessage("position fen " + game.fen());
-
-      // derinlik: cihazına göre ayarlı (mobil için makul)
-      const skill = parseInt(skillSel.value, 10);
-      const depth = skill <= 3 ? 8 : skill <= 8 ? 10 : skill <= 15 ? 12 : 14;
-
-      engine.postMessage("go depth " + depth);
+    const mv = game.move(moveObj);
+    if(!mv){
+      // should not happen if legalTargets correct
+      clearHighlights();
+      render();
+      return;
     }
 
-    function requestEval(){
-      if (!engineReady) return;
-      // kısa bir değerlendirme isteği (çok ağır olmasın)
-      engine.postMessage("position fen " + game.fen());
-      engine.postMessage("go depth 10");
+    clearHighlights();
+    addLog(`🧾 Hamle: ${mv.san}`);
+    coachCommentAfterMove();
+    render();
+
+    // Analyst: ask cloud eval (and also used for AI)
+    runCloudEvalAndAiIfNeeded();
+  }
+
+  // ======================
+  //  Cloud Eval + AI move
+  // ======================
+  async function fetchCloudEval(fen){
+    // Lichess requires fen param, can add multiPv=1 for top line
+    const url = `${CLOUD_EVAL_URL}?fen=${encodeURIComponent(fen)}&multiPv=1`;
+    const res = await fetch(url, {method:"GET"});
+    if(!res.ok) throw new Error("Cloud eval hata: " + res.status);
+    return await res.json();
+  }
+
+  function formatEval(obj){
+    // Lichess cloud-eval returns either cp or mate in pvs[0]
+    // Example: {pvs:[{cp: 23, moves:"e2e4 e7e5 ..."}], ...}
+    if(!obj || !obj.pvs || !obj.pvs[0]) return {text:"-", bestUci:null, bestSan:null, cp:null, mate:null};
+
+    const pv = obj.pvs[0];
+    const bestMoves = (pv.moves || "").trim().split(/\s+/);
+    const bestUci = bestMoves[0] || null;
+
+    let cp = (typeof pv.cp === "number") ? pv.cp : null;
+    let mate = (typeof pv.mate === "number") ? pv.mate : null;
+
+    let text = "-";
+    if(mate !== null) text = `#${mate}`;
+    else if(cp !== null) text = (cp/100).toFixed(2);
+
+    return {text, bestUci, cp, mate};
+  }
+
+  function uciToMove(uci){
+    // uci like e2e4 or e7e8q
+    if(!uci || uci.length < 4) return null;
+    const from = uci.slice(0,2);
+    const to = uci.slice(2,4);
+    const prom = uci.length >= 5 ? uci[4] : undefined;
+    const obj = {from, to};
+    if(prom) obj.promotion = prom;
+    return obj;
+  }
+
+  function humanEvalText(cp, mate){
+    // Positive means advantage for side to move? Actually cp is from pov of side to move in lichess cloud-eval.
+    // We'll interpret: >0 good for side to move.
+    if(mate !== null){
+      if(mate > 0) return "Komutan: Mat tehdidin var, bitirici hamle ara.";
+      if(mate < 0) return "Komutan: Mat tehlikesi! Şah güvenliğini hemen çöz.";
+      return "Komutan: Mat çizgisi.";
+    }
+    if(cp === null) return "Analist: Değerlendirme alınamadı.";
+    const v = cp/100;
+    if(v > 1.5) return "Analist: Belirgin üstünlük. Taşlarını aktif tut, sadeleştirmeyi düşün.";
+    if(v > 0.4) return "Analist: Hafif avantaj. Merkez ve gelişime devam.";
+    if(v > -0.4) return "Analist: Dengede. Küçük iyileştirmeler önemli.";
+    if(v > -1.5) return "Analist: Zor pozisyon. Savun, zayıflıkları koru, taktiklere dikkat.";
+    return "Analist: Ciddi baskı var. Şah güvenliği ve materyal kaybına dikkat.";
+  }
+
+  async function runCloudEvalAndAiIfNeeded(){
+    // Show loading state
+    engineP.textContent = "Bulut (Lichess)";
+    evalP.textContent = "...";
+    setAnalyst("Analist: Pozisyon değerlendiriliyor...");
+    netStatus.textContent = "Durum: Motor verisi alınıyor...";
+
+    const fen = game.fen();
+    try{
+      const data = await fetchCloudEval(fen);
+      const {text, bestUci, cp, mate} = formatEval(data);
+
+      evalP.textContent = text;
+      setAnalyst(humanEvalText(cp, mate));
+      netStatus.textContent = "Durum: Hazır";
+
+      // If it's black to move, AI plays black (can be extended later)
+      const toMove = game.turn(); // 'w' or 'b'
+      const wantAi = aiEnabled && (toMove === "b") && !game.isGameOver();
+
+      if(wantAi){
+        await doAiMove(bestUci);
+      }
+    } catch(err){
+      evalP.textContent = "-";
+      setAnalyst("Analist: İnternet/motor hatası. Şimdilik sadece kurallı 2 kişilik oynayabilirsin.");
+      netStatus.textContent = "Durum: Motor erişimi yok (internet?)";
+    }
+  }
+
+  async function doAiMove(bestUciFromCloud){
+    aiThinking = true;
+    const lvl = LEVELS[levelSel.value] || LEVELS.easy;
+    netStatus.textContent = "Durum: AI düşünüyor...";
+    setCoach("🧠 Komutan: Rakip hamle hazırlıyor...");
+
+    // Slight delay to feel natural
+    await new Promise(r => setTimeout(r, lvl.thinkMs));
+
+    // Prefer cloud best move if legal
+    let chosen = null;
+    if(bestUciFromCloud){
+      const m = uciToMove(bestUciFromCloud);
+      if(m){
+        const test = game.move(m);
+        if(test){
+          chosen = test;
+        }
+      }
     }
 
-    // ====== BUTONLAR ======
-    document.getElementById("resetBtn").addEventListener("click", () => {
-      game.reset();
-      lastEval = null;
-      board.start();
-      thinking = false;
-      uiStatus("Yeni oyun başladı. Beyaz başlar.");
-      requestEval();
-    });
+    // If cloud move not available, pick a random legal move (still legal rules)
+    if(!chosen){
+      const moves = game.moves({verbose:true});
+      if(moves.length){
+        const pick = moves[Math.floor(Math.random()*moves.length)];
+        chosen = game.move({from: pick.from, to: pick.to, promotion: pick.promotion});
+      }
+    }
 
-    document.getElementById("flipBtn").addEventListener("click", () => {
-      board.flip();
-    });
+    aiThinking = false;
+    netStatus.textContent = "Durum: Hazır";
 
-    // ====== BAŞLAT ======
-    initBoard();
-    initEngine();
-  </script>
-</body>
-  </html>
+    if(chosen){
+      addLog(`🤖 AI: ${chosen.san}`);
+      coachCommentAfterMove();
+      render();
+      // After AI move, refresh eval for the human turn
+      // (optional, but useful)
+      // Avoid infinite loops: only eval once more without auto-playing (turn is white now)
+      try{
+        const data = await fetchCloudEval(game.fen());
+        const {text, cp, mate} = formatEval(data);
+        evalP.textContent = text;
+        setAnalyst(humanEvalText(cp, mate));
+      } catch(_){}
+    }
+  }
+
+  // ======================
+  //  Buttons
+  // ======================
+  function reset()

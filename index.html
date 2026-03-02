@@ -1,117 +1,438 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Bozkurt Ordusu Satranç</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Bozkurt Ordusu Satranç</title>
+  <style>
+    :root{
+      --light:#f0d9b5;
+      --dark:#b58863;
+    }
+    body{
+      margin:0;
+      height:100vh;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      background:#111;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial;
+      user-select:none;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .wrap{
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      gap:10px;
+      padding:10px;
+    }
+    .topbar{
+      color:#fff;
+      width:min(92vw, 520px);
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:10px;
+      font-size:14px;
+      opacity:.95;
+    }
+    .btn{
+      background:#1f2937;
+      color:#fff;
+      border:1px solid #374151;
+      padding:8px 10px;
+      border-radius:10px;
+      cursor:pointer;
+    }
+    .btn:active{ transform: scale(0.98); }
+    .status{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+    .board{
+      width:min(92vw, 520px);
+      aspect-ratio:1/1;
+      display:grid;
+      grid-template-columns:repeat(8,1fr);
+      border-radius:14px;
+      overflow:hidden;
+      box-shadow: 0 18px 60px rgba(0,0,0,.5);
+      background:#000;
+      touch-action: manipulation;
+    }
+    .sq{
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-size: clamp(26px, 6vw, 44px);
+      cursor:pointer;
+      position:relative;
+    }
+    .light{ background:var(--light); }
+    .dark{ background:var(--dark); }
 
-<style>
-body{
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  height:100vh;
-  background:#111;
-  margin:0;
-}
-
-.board{
-  display:grid;
-  grid-template-columns:repeat(8,60px);
-  grid-template-rows:repeat(8,60px);
-  user-select:none;
-}
-
-.square{
-  width:60px;
-  height:60px;
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  font-size:38px;
-  cursor:pointer;
-}
-
-.light{ background:#f0d9b5; }
-.dark{ background:#b58863; }
-
-.selected{
-  outline:3px solid red;
-}
-</style>
+    .sq.selected::after{
+      content:"";
+      position:absolute;
+      inset:5%;
+      border:3px solid rgba(239,68,68,.95);
+      border-radius:10px;
+      pointer-events:none;
+    }
+    .sq.legal::before{
+      content:"";
+      position:absolute;
+      width:28%;
+      height:28%;
+      border-radius:999px;
+      background: rgba(34,197,94,.5);
+      pointer-events:none;
+    }
+    .sq.capture.legal::before{
+      width:78%;
+      height:78%;
+      background: rgba(34,197,94,.2);
+      border:3px solid rgba(34,197,94,.75);
+    }
+    .msg{
+      color:#fff;
+      width:min(92vw, 520px);
+      font-size:13px;
+      opacity:.9;
+      min-height:18px;
+      text-align:center;
+    }
+  </style>
 </head>
-
 <body>
+  <div class="wrap">
+    <div class="topbar">
+      <div class="status">
+        <strong>Bozkurt Ordusu</strong>
+        <span id="turnText">Sıra: Beyaz</span>
+      </div>
+      <div style="display:flex; gap:8px;">
+        <button class="btn" id="resetBtn">Yeniden Başlat</button>
+      </div>
+    </div>
 
-<div class="board" id="board"></div>
+    <div class="board" id="board"></div>
+    <div class="msg" id="msg"></div>
+  </div>
 
 <script>
-const board = document.getElementById("board");
+(() => {
+  // Piece encoding: 'wp','wn','wb','wr','wq','wk' and black 'bp'...
+  const U = {
+    wp:"♙", wn:"♘", wb:"♗", wr:"♖", wq:"♕", wk:"♔",
+    bp:"♟", bn:"♞", bb:"♝", br:"♜", bq:"♛", bk:"♚"
+  };
 
-let position = [
-  "♜","♞","♝","♛","♚","♝","♞","♜",
-  "♟","♟","♟","♟","♟","♟","♟","♟",
-  "","","","","","","","",
-  "","","","","","","","",
-  "","","","","","","","",
-  "","","","","","","","",
-  "♙","♙","♙","♙","♙","♙","♙","♙",
-  "♖","♘","♗","♕","♔","♗","♘","♖"
-];
+  const boardEl = document.getElementById("board");
+  const msgEl = document.getElementById("msg");
+  const turnTextEl = document.getElementById("turnText");
+  const resetBtn = document.getElementById("resetBtn");
 
-let selectedIndex = null;
+  let state, selected = null, legalSet = new Set();
 
-function drawBoard(){
-  board.innerHTML = "";
-
-  for(let i=0;i<64;i++){
-    const square = document.createElement("div");
-    square.classList.add("square");
-
-    if((Math.floor(i/8)+i)%2===0){
-      square.classList.add("light");
-    } else {
-      square.classList.add("dark");
-    }
-
-    square.textContent = position[i];
-
-    if(i === selectedIndex){
-      square.classList.add("selected");
-    }
-
-    square.addEventListener("click", () => {
-
-      // Eğer seçim yoksa ve taş varsa seç
-      if(selectedIndex === null && position[i] !== ""){
-        selectedIndex = i;
-        drawBoard();
-        return;
-      }
-
-      // Aynı kareye tekrar basılırsa iptal
-      if(selectedIndex === i){
-        selectedIndex = null;
-        drawBoard();
-        return;
-      }
-
-      // Eğer seçim varsa taşı taşı
-      if(selectedIndex !== null){
-        position[i] = position[selectedIndex];
-        position[selectedIndex] = "";
-        selectedIndex = null;
-        drawBoard();
-      }
-
-    });
-
-    board.appendChild(square);
+  function initialBoard(){
+    // row 0 is black back rank, row 7 is white back rank
+    return [
+      ["br","bn","bb","bq","bk","bb","bn","br"],
+      ["bp","bp","bp","bp","bp","bp","bp","bp"],
+      [null,null,null,null,null,null,null,null],
+      [null,null,null,null,null,null,null,null],
+      [null,null,null,null,null,null,null,null],
+      [null,null,null,null,null,null,null,null],
+      ["wp","wp","wp","wp","wp","wp","wp","wp"],
+      ["wr","wn","wb","wq","wk","wb","wn","wr"]
+    ];
   }
-}
 
-drawBoard();
+  function reset(){
+    state = {
+      b: initialBoard(),
+      turn: "w", // 'w' or 'b'
+    };
+    selected = null;
+    legalSet.clear();
+    setMsg("Hazır.");
+    render();
+  }
+
+  function setMsg(t){ msgEl.textContent = t; }
+
+  function inBounds(r,c){ return r>=0 && r<8 && c>=0 && c<8; }
+  function colorOf(p){ return p ? p[0] : null; }
+  function typeOf(p){ return p ? p[1] : null; }
+
+  function cloneBoard(b){ return b.map(row => row.slice()); }
+
+  function findKing(b, col){
+    for(let r=0;r<8;r++){
+      for(let c=0;c<8;c++){
+        const p=b[r][c];
+        if(p===col+"k") return [r,c];
+      }
+    }
+    return null;
+  }
+
+  function isSquareAttacked(b, r, c, byColor){
+    // check attacks byColor -> (r,c)
+    // Pawns
+    const dir = (byColor==="w") ? -1 : 1;
+    for(const dc of [-1,1]){
+      const rr = r - dir;
+      const cc = c - dc;
+      if(inBounds(rr,cc) && b[rr][cc] === byColor+"p") return true;
+    }
+    // Knights
+    const K = [[-2,-1],[-2,1],[-1,-2],[-1,2],[1,-2],[1,2],[2,-1],[2,1]];
+    for(const [dr,dc] of K){
+      const rr=r+dr, cc=c+dc;
+      if(inBounds(rr,cc) && b[rr][cc]===byColor+"n") return true;
+    }
+    // Bishops/Queens (diagonals)
+    const D = [[-1,-1],[-1,1],[1,-1],[1,1]];
+    for(const [dr,dc] of D){
+      let rr=r+dr, cc=c+dc;
+      while(inBounds(rr,cc)){
+        const p=b[rr][cc];
+        if(p){
+          if(colorOf(p)===byColor && (typeOf(p)==="b" || typeOf(p)==="q")) return true;
+          break;
+        }
+        rr+=dr; cc+=dc;
+      }
+    }
+    // Rooks/Queens (straight)
+    const S = [[-1,0],[1,0],[0,-1],[0,1]];
+    for(const [dr,dc] of S){
+      let rr=r+dr, cc=c+dc;
+      while(inBounds(rr,cc)){
+        const p=b[rr][cc];
+        if(p){
+          if(colorOf(p)===byColor && (typeOf(p)==="r" || typeOf(p)==="q")) return true;
+          break;
+        }
+        rr+=dr; cc+=dc;
+      }
+    }
+    // King
+    for(let dr=-1;dr<=1;dr++){
+      for(let dc=-1;dc<=1;dc++){
+        if(dr===0 && dc===0) continue;
+        const rr=r+dr, cc=c+dc;
+        if(inBounds(rr,cc) && b[rr][cc]===byColor+"k") return true;
+      }
+    }
+    return false;
+  }
+
+  function wouldLeaveKingInCheck(fromR, fromC, toR, toC){
+    const b2 = cloneBoard(state.b);
+    const moving = b2[fromR][fromC];
+    b2[toR][toC] = moving;
+    b2[fromR][fromC] = null;
+
+    // auto-promote pawn to queen if reaches last rank
+    if(moving && typeOf(moving)==="p"){
+      if(colorOf(moving)==="w" && toR===0) b2[toR][toC] = "wq";
+      if(colorOf(moving)==="b" && toR===7) b2[toR][toC] = "bq";
+    }
+
+    const myCol = state.turn;
+    const kingPos = findKing(b2, myCol);
+    if(!kingPos) return true;
+    const [kr,kc] = kingPos;
+    const opp = myCol==="w" ? "b" : "w";
+    return isSquareAttacked(b2, kr, kc, opp);
+  }
+
+  function genPseudoMovesForPiece(b, r, c){
+    const p = b[r][c];
+    if(!p) return [];
+    const col = colorOf(p), t = typeOf(p);
+    const moves = [];
+
+    const push = (rr,cc) => { if(inBounds(rr,cc)) moves.push([rr,cc]); };
+
+    if(t==="p"){
+      const dir = (col==="w") ? -1 : 1;
+      const startRow = (col==="w") ? 6 : 1;
+
+      // forward 1
+      const r1 = r + dir;
+      if(inBounds(r1,c) && !b[r1][c]){
+        push(r1,c);
+        // forward 2 from start
+        const r2 = r + 2*dir;
+        if(r===startRow && inBounds(r2,c) && !b[r2][c]) push(r2,c);
+      }
+      // captures
+      for(const dc of [-1,1]){
+        const rr=r+dir, cc=c+dc;
+        if(inBounds(rr,cc) && b[rr][cc] && colorOf(b[rr][cc])!==col){
+          push(rr,cc);
+        }
+      }
+    }
+
+    if(t==="n"){
+      const K = [[-2,-1],[-2,1],[-1,-2],[-1,2],[1,-2],[1,2],[2,-1],[2,1]];
+      for(const [dr,dc] of K){
+        const rr=r+dr, cc=c+dc;
+        if(!inBounds(rr,cc)) continue;
+        if(!b[rr][cc] || colorOf(b[rr][cc])!==col) push(rr,cc);
+      }
+    }
+
+    if(t==="b" || t==="r" || t==="q"){
+      const dirs = [];
+      if(t==="b" || t==="q") dirs.push([-1,-1],[-1,1],[1,-1],[1,1]);
+      if(t==="r" || t==="q") dirs.push([-1,0],[1,0],[0,-1],[0,1]);
+      for(const [dr,dc] of dirs){
+        let rr=r+dr, cc=c+dc;
+        while(inBounds(rr,cc)){
+          if(!b[rr][cc]){
+            push(rr,cc);
+          } else {
+            if(colorOf(b[rr][cc])!==col) push(rr,cc);
+            break;
+          }
+          rr+=dr; cc+=dc;
+        }
+      }
+    }
+
+    if(t==="k"){
+      for(let dr=-1;dr<=1;dr++){
+        for(let dc=-1;dc<=1;dc++){
+          if(dr===0 && dc===0) continue;
+          const rr=r+dr, cc=c+dc;
+          if(!inBounds(rr,cc)) continue;
+          if(!b[rr][cc] || colorOf(b[rr][cc])!==col) push(rr,cc);
+        }
+      }
+      // Rok yok (istersen sonra ekleriz)
+    }
+
+    return moves;
+  }
+
+  function genLegalMovesFrom(r,c){
+    const p = state.b[r][c];
+    if(!p) return [];
+    if(colorOf(p)!==state.turn) return [];
+
+    const pseudo = genPseudoMovesForPiece(state.b, r, c);
+    const legal = [];
+    for(const [rr,cc] of pseudo){
+      // cannot move onto own piece already handled in pseudo, but safe check
+      const dest = state.b[rr][cc];
+      if(dest && colorOf(dest)===state.turn) continue;
+
+      // king safety
+      if(!wouldLeaveKingInCheck(r,c,rr,cc)){
+        legal.push([rr,cc]);
+      }
+    }
+    return legal;
+  }
+
+  function move(fromR, fromC, toR, toC){
+    const p = state.b[fromR][fromC];
+    state.b[toR][toC] = p;
+    state.b[fromR][fromC] = null;
+
+    // promotion auto queen
+    if(p && typeOf(p)==="p"){
+      if(colorOf(p)==="w" && toR===0) state.b[toR][toC] = "wq";
+      if(colorOf(p)==="b" && toR===7) state.b[toR][toC] = "bq";
+    }
+
+    // switch turn
+    state.turn = (state.turn==="w") ? "b" : "w";
+  }
+
+  function squareKey(r,c){ return r + "," + c; }
+
+  function onSquareTap(r,c){
+    const p = state.b[r][c];
+
+    // If selected and tap a legal destination -> move
+    if(selected){
+      const [sr,sc] = selected;
+      const key = squareKey(r,c);
+      if(legalSet.has(key)){
+        move(sr,sc,r,c);
+        selected = null;
+        legalSet.clear();
+        setMsg("Hamle yapıldı.");
+        render();
+        return;
+      }
+    }
+
+    // Otherwise try select a piece of current turn
+    if(p && colorOf(p)===state.turn){
+      selected = [r,c];
+      const legal = genLegalMovesFrom(r,c);
+      legalSet = new Set(legal.map(([rr,cc]) => squareKey(rr,cc)));
+      setMsg(legal.length ? "Taş seçildi. Yeşil kareler legal hamle." : "Bu taşın legal hamlesi yok.");
+      render();
+      return;
+    }
+
+    // Tap on empty or opponent piece without a legal capture -> clear selection
+    selected = null;
+    legalSet.clear();
+    setMsg("");
+    render();
+  }
+
+  function render(){
+    boardEl.innerHTML = "";
+    turnTextEl.textContent = "Sıra: " + (state.turn==="w" ? "Beyaz" : "Siyah");
+
+    for(let r=0;r<8;r++){
+      for(let c=0;c<8;c++){
+        const sq = document.createElement("div");
+        const isLight = (r+c)%2===0;
+        sq.className = "sq " + (isLight ? "light" : "dark");
+
+        const p = state.b[r][c];
+        sq.textContent = p ? U[p] : "";
+
+        // selected highlight
+        if(selected && selected[0]===r && selected[1]===c){
+          sq.classList.add("selected");
+        }
+
+        // legal move highlight
+        if(legalSet.has(squareKey(r,c))){
+          sq.classList.add("legal");
+          if(state.b[r][c] && selected){
+            // capture square
+            sq.classList.add("capture");
+          }
+        }
+
+        sq.addEventListener("click", () => onSquareTap(r,c), {passive:true});
+        sq.addEventListener("touchend", (e) => { e.preventDefault(); onSquareTap(r,c); }, {passive:false});
+
+        boardEl.appendChild(sq);
+      }
+    }
+  }
+
+  resetBtn.addEventListener("click", reset);
+  reset();
+})();
 </script>
-
 </body>
 </html>

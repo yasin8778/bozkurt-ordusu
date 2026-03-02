@@ -4,68 +4,87 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Bozkurt Ordusu Satranç</title>
+
 <style>
 body{
-    display:flex;
-    justify-content:center;
-    align-items:center;
-    height:100vh;
-    background:#111;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  height:100vh;
+  background:#111;
 }
+
 .board{
-    display:grid;
-    grid-template-columns:repeat(8,60px);
-    grid-template-rows:repeat(8,60px);
+  display:grid;
+  grid-template-columns:repeat(8,60px);
+  grid-template-rows:repeat(8,60px);
 }
+
 .square{
-    display:flex;
-    justify-content:center;
-    align-items:center;
-    font-size:32px;
-    cursor:pointer;
+  width:60px;
+  height:60px;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  font-size:38px;
+  cursor:pointer;
 }
-.white{background:#f0d9b5;}
-.black{background:#b58863;}
+
+.light{ background:#f0d9b5; }
+.dark{ background:#b58863; }
+
+.selected{
+  outline:3px solid red;
+}
 </style>
 </head>
+
 <body>
 
 <div class="board" id="board"></div>
 
 <script>
-const board = document.getElementById("board");
-const pieces = {
-r:"♜", n:"♞", b:"♝", q:"♛", k:"♚", p:"♟",
-R:"♖", N:"♘", B:"♗", Q:"♕", K:"♔", P:"♙"
-};
-
-let startPosition = [
-"rnbqkbnr",
-"pppppppp",
-"........",
-"........",
-"........",
-"........",
-"PPPPPPPP",
-"RNBQKBNR"
+const pieces = [
+  "♜","♞","♝","♛","♚","♝","♞","♜",
+  "♟","♟","♟","♟","♟","♟","♟","♟",
+  "","","","","","","","",
+  "","","","","","","","",
+  "","","","","","","","",
+  "","","","","","","","",
+  "♙","♙","♙","♙","♙","♙","♙","♙",
+  "♖","♘","♗","♕","♔","♗","♘","♖"
 ];
 
-function drawBoard(){
-    board.innerHTML="";
-    for(let r=0;r<8;r++){
-        for(let c=0;c<8;c++){
-            const square=document.createElement("div");
-            square.className="square "+((r+c)%2==0?"white":"black");
-            let piece=startPosition[r][c];
-            if(piece!="."){
-                square.textContent=pieces[piece];
-            }
-            board.appendChild(square);
-        }
-    }
-}
+const board = document.getElementById("board");
+let selected = null;
 
-drawBoard();
+pieces.forEach((piece,i)=>{
+  const square = document.createElement("div");
+  square.classList.add("square");
+  
+  if((Math.floor(i/8)+i)%2==0){
+    square.classList.add("light");
+  }else{
+    square.classList.add("dark");
+  }
+
+  square.textContent = piece;
+
+  square.addEventListener("click",()=>{
+    if(selected===null && square.textContent!==""){
+      selected = square;
+      square.classList.add("selected");
+    }
+    else if(selected){
+      square.textContent = selected.textContent;
+      selected.textContent = "";
+      selected.classList.remove("selected");
+      selected = null;
+    }
+  });
+
+  board.appendChild(square);
+});
 </script>
 
 </body>

@@ -7,7 +7,6 @@
   <style>
     :root{
       --bg:#0b1220;
-      --panel:#111a2e;
       --text:#e6eefc;
       --muted:#a7b3cc;
       --accent:#4f8cff;
@@ -15,10 +14,8 @@
       --bad:#ff5c7a;
       --warn:#ffcc66;
 
-      --light:#f0d9b5;   /* klasik satranç */
-      --dark:#b58863;    /* klasik satranç */
-      --hl:#57a6ff;
-      --cap:#ff6b6b;
+      --light:#f0d9b5;
+      --dark:#b58863;
     }
     *{box-sizing:border-box}
     body{
@@ -28,7 +25,7 @@
       font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;
       -webkit-tap-highlight-color: transparent;
     }
-    .wrap{max-width:980px;margin:0 auto;padding:14px;display:grid;gap:12px;}
+    .wrap{max-width:1020px;margin:0 auto;padding:14px;display:grid;gap:12px;}
     .top{
       background:linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
       border:1px solid rgba(255,255,255,.10);
@@ -36,16 +33,12 @@
       padding:14px;
       display:flex;align-items:center;justify-content:space-between;gap:12px;
     }
-    .brand{display:flex;flex-direction:column;gap:3px;min-width:220px}
+    .brand{display:flex;flex-direction:column;gap:3px;min-width:240px}
     .brand .t{font-size:22px;font-weight:850;letter-spacing:.2px;display:flex;align-items:center;gap:10px}
     .brand .s{color:var(--muted);font-size:12.5px;line-height:1.35}
-    .wolfIcon{
-      width:26px;height:26px;flex:0 0 auto;
-      filter: drop-shadow(0 8px 18px rgba(79,140,255,.25));
-      opacity:.95;
-    }
+    .wolfIcon{width:26px;height:26px;opacity:.95;filter: drop-shadow(0 8px 18px rgba(79,140,255,.25));}
     .controls{display:flex;flex-wrap:wrap;gap:10px;justify-content:flex-end;align-items:center}
-    select, button{
+    select, button, input[type="number"]{
       background:rgba(255,255,255,.06);
       color:var(--text);
       border:1px solid rgba(255,255,255,.12);
@@ -61,7 +54,7 @@
     }
     button:active{transform:translateY(1px)}
     .grid{display:grid;grid-template-columns:1fr;gap:12px;}
-    @media(min-width:860px){ .grid{grid-template-columns: 1.05fr .95fr;} }
+    @media(min-width:900px){ .grid{grid-template-columns: 1.05fr .95fr;} }
     .card{
       background:linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
       border:1px solid rgba(255,255,255,.10);
@@ -69,7 +62,6 @@
       padding:14px;
     }
 
-    /* HUD */
     .hud{width:100%;display:flex;gap:10px;flex-wrap:wrap;align-items:center;justify-content:space-between}
     .pill{
       background:rgba(255,255,255,.05);
@@ -83,7 +75,6 @@
     .pill b{color:var(--text)}
     .statusLine{width:100%;color:var(--muted);font-size:13px;line-height:1.4;padding-top:2px}
 
-    /* BOARD: kare garanti */
     .boardWrap{display:flex;flex-direction:column;gap:10px;align-items:center}
     .board{
       width:min(92vw, 520px);
@@ -109,42 +100,20 @@
     .sq.light{background:var(--light)}
     .sq.dark{background:var(--dark)}
     .sq.sel{outline:3px solid rgba(255,215,0,.9);outline-offset:-3px}
-    .sq.move::before{
-      content:"";position:absolute;width:18%;height:18%;
-      border-radius:999px;background:rgba(87,166,255,.75);
-    }
-    .sq.cap::before{
-      content:"";position:absolute;width:70%;height:70%;
-      border-radius:999px;border:4px solid rgba(255,92,122,.75);
-      background:transparent;
-    }
+    .sq.move::before{content:"";position:absolute;width:18%;height:18%;border-radius:999px;background:rgba(87,166,255,.75);}
+    .sq.cap::before{content:"";position:absolute;width:70%;height:70%;border-radius:999px;border:4px solid rgba(255,92,122,.75);background:transparent;}
     .sq.check{outline:3px solid rgba(255,92,122,.95);outline-offset:-3px}
     .lastFrom, .lastTo{outline:3px solid rgba(255,209,102,.85);outline-offset:-3px}
 
-    /* TAŞLAR: siyah daha belirgin */
-    .piece{
-      line-height:1;
-      transform: translateZ(0);
-      user-select:none;
-      -webkit-user-select:none;
-    }
+    .piece{line-height:1;transform: translateZ(0);user-select:none;-webkit-user-select:none;}
     .piece.w{
-      text-shadow:
-        0 2px 0 rgba(0,0,0,.22),
-        0 0 10px rgba(255,255,255,.22),
-        0 0 2px rgba(0,0,0,.25);
+      text-shadow:0 2px 0 rgba(0,0,0,.22),0 0 10px rgba(255,255,255,.22),0 0 2px rgba(0,0,0,.25);
     }
     .piece.b{
-      /* siyah taşları “parlat”: kenar aydınlığı + gölge */
-      text-shadow:
-        0 0 2px rgba(255,255,255,.55),
-        0 0 8px rgba(255,255,255,.35),
-        0 3px 0 rgba(0,0,0,.45),
-        0 0 14px rgba(0,0,0,.25);
-      filter: contrast(1.15);
+      text-shadow:0 0 2px rgba(255,255,255,.60),0 0 10px rgba(255,255,255,.38),0 3px 0 rgba(0,0,0,.50),0 0 14px rgba(0,0,0,.25);
+      filter: contrast(1.18);
     }
 
-    /* Side panel */
     .sideTitle{font-weight:850;font-size:16px;margin:2px 0 10px}
     .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:10px 0 10px}
     .tag{
@@ -163,22 +132,41 @@
     }
     .moves{
       margin-top:10px;
-      max-height:220px;
+      max-height:200px;
       overflow:auto;
       font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
       font-size:12.5px;
       color:#d8e3ff;
     }
     .moves div{padding:3px 0;border-bottom:1px dashed rgba(255,255,255,.08)}
-    .hint{color:var(--muted);font-size:12.5px;line-height:1.45;margin-top:10px}
     .good{color:var(--good)} .bad{color:var(--bad)} .warn{color:var(--warn)}
+    .hint{color:var(--muted);font-size:12.5px;line-height:1.45;margin-top:10px}
 
-    /* Music mini */
+    .progress{
+      width:100%; height:12px; border-radius:999px;
+      border:1px solid rgba(255,255,255,.12);
+      background:rgba(255,255,255,.06);
+      overflow:hidden;
+      margin-top:8px;
+    }
+    .bar{
+      height:100%;
+      width:0%;
+      background:linear-gradient(90deg, rgba(57,217,138,.95), rgba(79,140,255,.85));
+    }
+
+    .miniGrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+    .miniCard{
+      padding:10px;border-radius:16px;
+      border:1px solid rgba(255,255,255,.10);
+      background:rgba(0,0,0,.18);
+    }
+    .miniCard .h{font-weight:800;font-size:13px}
+    .miniCard .v{margin-top:4px;color:var(--muted);font-size:12.5px;line-height:1.35}
     .musicRow{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:10px}
     .musicRow input[type="range"]{width:120px}
     .musicNow{color:var(--muted);font-size:12px;line-height:1.3}
 
-    /* SPLASH (Orhun animasyonu) */
     .splash{
       position:fixed; inset:0;
       background:radial-gradient(900px 600px at 40% 25%, rgba(79,140,255,.20) 0%, rgba(0,0,0,.88) 55%, rgba(0,0,0,.95) 100%);
@@ -187,34 +175,21 @@
       padding:18px;
     }
     .splashCard{
-      width:min(680px, 100%);
+      width:min(720px, 100%);
       border-radius:22px;
       border:1px solid rgba(255,255,255,.10);
       background:linear-gradient(180deg, rgba(255,255,255,.07), rgba(255,255,255,.03));
       box-shadow:0 30px 80px rgba(0,0,0,.55);
       padding:18px;
       text-align:center;
-      overflow:hidden;
-      position:relative;
     }
-    .splashTop{
-      display:flex; align-items:center; justify-content:center; gap:10px;
-      font-weight:900; letter-spacing:.3px;
-      font-size:22px;
-    }
+    .splashTop{font-weight:900;letter-spacing:.3px;font-size:22px}
     .splashSub{margin-top:6px;color:var(--muted);font-size:13px;line-height:1.4}
-    .runes{
-      margin-top:14px;
-      font-size:34px;
-      letter-spacing:4px;
-      opacity:.92;
-      filter: drop-shadow(0 10px 25px rgba(79,140,255,.25));
-      animation: runeGlow 1.2s ease-in-out infinite alternate;
-    }
+    .runes{margin-top:14px;font-size:34px;letter-spacing:4px;opacity:.92;filter: drop-shadow(0 10px 25px rgba(79,140,255,.25));animation: runeGlow 1.2s ease-in-out infinite alternate;}
     @keyframes runeGlow{ from{transform:translateY(0);opacity:.78} to{transform:translateY(-2px);opacity:1} }
     .typeLine{
       margin:14px auto 0;
-      width:min(560px, 100%);
+      width:min(620px, 100%);
       font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
       font-size:13px;
       color:#d8e3ff;
@@ -225,25 +200,22 @@
     }
     @keyframes typing{ from{width:0} to{width:100%} }
     @keyframes caret{ 50%{border-color:transparent} }
+
     .splashQuote{
       margin-top:14px;
-      padding:12px 12px;
+      padding:12px;
       border-radius:16px;
       border:1px solid rgba(255,255,255,.10);
       background:rgba(0,0,0,.18);
       color:rgba(230,238,252,.92);
       line-height:1.45;
       font-size:14px;
+      text-align:left;
     }
-    .splashBtnRow{
-      margin-top:14px;
-      display:flex; gap:10px; justify-content:center; flex-wrap:wrap;
-    }
+    .splashBtnRow{margin-top:14px;display:flex; gap:10px; justify-content:center; flex-wrap:wrap;}
     .splashBtn{
-      cursor:pointer;
-      user-select:none;
-      padding:10px 14px;
-      border-radius:14px;
+      cursor:pointer; user-select:none;
+      padding:10px 14px;border-radius:14px;
       border:1px solid rgba(255,255,255,.14);
       background:rgba(255,255,255,.06);
       color:var(--text);
@@ -253,13 +225,21 @@
       background:linear-gradient(180deg, rgba(79,140,255,.95), rgba(79,140,255,.70));
       border-color: rgba(79,140,255,.35);
     }
-    .splashNote{margin-top:10px;color:var(--muted);font-size:12px}
+    .splashNote{margin-top:10px;color:var(--muted);font-size:12px;line-height:1.45}
     .hide{display:none !important;}
+    .fileBtn{
+      display:inline-flex;align-items:center;gap:8px;
+      padding:10px 14px;border-radius:14px;
+      border:1px solid rgba(255,255,255,.14);
+      background:rgba(255,255,255,.06);
+      cursor:pointer;
+      font-weight:850;
+    }
+    input[type="file"]{display:none;}
   </style>
 </head>
 <body>
 
-  <!-- Splash / Intro -->
   <div class="splash" id="splash">
     <div class="splashCard">
       <div class="splashTop">🇹🇷 Bozkurt Ordusu <span style="opacity:.7">(Börüler)</span></div>
@@ -268,17 +248,24 @@
       <div class="runes">𐰉𐰇𐰺𐰇  ·  𐰴𐰍𐰣  ·  𐰉𐰇𐰺𐰇</div>
       <div class="typeLine">𐰉𐰇𐰺𐰇 (Börü) · 𐰴𐰍𐰣 (Kağan) · 𐰑𐰓𐰑𐰓 (Dede) — Savaş Başlıyor…</div>
 
-      <div class="splashQuote" id="kaganQuote">
-        <b>Kağan:</b> “Her Türk asker doğar. Görev değişir; töre değişmez.”
+      <div class="splashQuote">
+        <b>Kağan:</b> “Her Türk asker doğar. Görev değişir; töre değişmez.”<br>
+        <b>Dede:</b> “Akıl ile oynayanın yolu açık olur.”
       </div>
 
       <div class="splashBtnRow">
         <div class="splashBtn primary" id="startBtn">Başlat (Müzik Aç)</div>
         <div class="splashBtn" id="startSilentBtn">Sessiz Başlat</div>
       </div>
+
+      <div class="splashBtnRow" style="margin-top:10px">
+        <label class="fileBtn" for="anthemFile">🎵 İstiklal Marşı dosyası seç (opsiyonel)</label>
+        <input id="anthemFile" type="file" accept="audio/*" />
+      </div>
+
       <div class="splashNote">
-        Not: Mobil tarayıcılar otomatik müziği engeller. Başlat’a basınca giriş müziği başlar.<br>
-        Müzik dosyaları repo’da <b>/audio/</b> klasöründe olmalı.
+        Not: İstiklal Marşı kaydı için <b>kendi yasal dosyanı</b> seçebilirsin. Seçersen girişte o çalar, sonra epik listeye geçer.<br>
+        Telifsiz müzikler için repo’ya <b>/audio/</b> klasörüne mp3 koyabilirsin (aşağıda).
       </div>
     </div>
   </div>
@@ -287,7 +274,6 @@
     <div class="top">
       <div class="brand">
         <div class="t">
-          <!-- küçük kurt başı simgesi (inline svg) -->
           <svg class="wolfIcon" viewBox="0 0 64 64" aria-hidden="true">
             <path fill="rgba(255,255,255,.92)" d="M8 40c2-9 7-16 15-21l4-7 5 9c4-2 9-2 13 0l5-9 4 7c8 5 13 12 15 21-4-2-8-2-12 0-2 6-6 11-12 14-3 2-6 3-8 3s-5-1-8-3c-6-3-10-8-12-14-4-2-8-2-12 0z"/>
             <path fill="rgba(79,140,255,.55)" d="M22 42c3 7 9 12 10 12s7-5 10-12c-4 2-8 3-10 3s-6-1-10-3z"/>
@@ -320,7 +306,7 @@
         <div id="board" class="board" aria-label="Satranç tahtası"></div>
 
         <div class="statusLine" id="helpLine">
-          Dokunma: Taş seç → hedef kareye dokun. Kurallara aykırı hamleye izin vermez. Rok/En passant/Terfi dahil.
+          Şah yenemez. Oyun MAT / PAT ile biter. Rok/En passant/Terfi dahil.
         </div>
       </div>
 
@@ -343,34 +329,120 @@
           <div style="margin-top:8px;color:var(--muted)" id="dedeText">Hamle bekleniyor.</div>
         </div>
 
+        <div class="sideTitle" style="margin-top:14px">Günlük Hedef & Çizelge</div>
+
+        <div class="miniGrid">
+          <div class="miniCard">
+            <div class="h">Günlük hedef (oyun)</div>
+            <div class="v">
+              <input id="goalGames" type="number" min="1" max="200" value="5" style="width:110px"/> 
+              <button id="saveGoalBtn">Kaydet</button>
+            </div>
+          </div>
+          <div class="miniCard">
+            <div class="h">Bugün</div>
+            <div class="v" id="todayLbl">-</div>
+          </div>
+        </div>
+
+        <div class="miniCard" style="margin-top:10px">
+          <div class="h">Tamamlanma</div>
+          <div class="v"><b id="progressLbl">0 / 0 (%0)</b></div>
+          <div class="progress"><div class="bar" id="bar"></div></div>
+        </div>
+
+        <div class="miniGrid" style="margin-top:10px">
+          <div class="miniCard">
+            <div class="h">Sonuçlar</div>
+            <div class="v" id="resultLbl">W:0 D:0 L:0</div>
+          </div>
+          <div class="miniCard">
+            <div class="h">Günlük analiz</div>
+            <div class="v" id="dailyAnalysisLbl">-</div>
+          </div>
+        </div>
+
         <div class="musicRow">
           <span class="tag">Ses</span>
           <input id="vol" type="range" min="0" max="1" step="0.01" value="0.8" />
           <button id="nextTrackBtn">Sonraki</button>
         </div>
-        <div class="musicNow" id="musicNow">Müzik listesi: /audio/ klasöründen çalar.</div>
+        <div class="musicNow" id="musicNow">Müzik: /audio/ klasöründen telifsiz epik parçalar çalar.</div>
 
         <div class="moves" id="movesBox" aria-label="Hamle listesi"></div>
         <div class="hint">
-          İpucu: “AI: Zor” bazı telefonlarda yavaşlayabilir. İstersen hız odaklı motor yaparım.
+          Telifsiz epik müzik koymak için: repo → <b>audio/</b> klasörü → mp3 yükle.
+          (Örn: <b>audio/epik-1.mp3</b>, <b>audio/epik-2.mp3</b>)
         </div>
       </div>
     </div>
   </div>
 
-  <!-- Offline Audio Player -->
   <audio id="player" preload="auto"></audio>
 
 <script>
 (() => {
+  // ================== STORAGE (daily) ==================
+  const LS_KEY = "bozkurt_daily_v1";
+
+  function todayKey(){
+    const d = new Date();
+    const y = d.getFullYear();
+    const m = String(d.getMonth()+1).padStart(2,"0");
+    const day = String(d.getDate()).padStart(2,"0");
+    return `${y}-${m}-${day}`;
+  }
+
+  function loadState(){
+    try{
+      const raw = localStorage.getItem(LS_KEY);
+      if(!raw) return null;
+      return JSON.parse(raw);
+    }catch{ return null; }
+  }
+
+  function defaultState(){
+    return {
+      date: todayKey(),
+      goalGames: 5,
+      gamesPlayed: 0,
+      wins: 0,
+      draws: 0,
+      losses: 0,
+      // basit analiz metrikleri
+      blunders: 0,
+      inaccuracies: 0,
+      goodMoves: 0,
+      avgSwingAbs: 0,
+      swingSamples: 0,
+    };
+  }
+
+  function saveState(s){
+    localStorage.setItem(LS_KEY, JSON.stringify(s));
+  }
+
+  let daily = loadState() || defaultState();
+  if(daily.date !== todayKey()){
+    daily = defaultState();
+    saveState(daily);
+  }
+
+  function updateDailySwing(absSwing){
+    daily.swingSamples++;
+    daily.avgSwingAbs = ((daily.avgSwingAbs * (daily.swingSamples-1)) + absSwing) / daily.swingSamples;
+  }
+
   // ================== MUSIC ==================
-  // TELİF NOTU: Bu sadece senin repo'ya koyduğun dosyaları çalar.
-  // Örnek: /audio/bozkurt-ordusu.mp3, /audio/turkluk-1.mp3 ...
-  const PLAYLIST = [
-    { title: "Bozkurt Ordusu (Giriş)", src: "audio/bozkurt-ordusu.mp3" },
-    { title: "Türklüğe Dair 1", src: "audio/turkluk-1.mp3" },
-    { title: "Türklüğe Dair 2", src: "audio/turkluk-2.mp3" },
-    { title: "Türklüğe Dair 3", src: "audio/turkluk-3.mp3" },
+  // İstiklal Marşı: kullanıcı dosyası (opsiyonel)
+  let anthemObjectUrl = null;
+
+  // Telifsiz EPİK liste: sen repo'ya koyarsın (örnek isimler)
+  const EPIC_PLAYLIST = [
+    { title: "Epik 1", src: "audio/epik-1.mp3" },
+    { title: "Epik 2", src: "audio/epik-2.mp3" },
+    { title: "Epik 3", src: "audio/epik-3.mp3" },
+    { title: "Epik 4", src: "audio/epik-4.mp3" },
   ];
 
   const player = document.getElementById("player");
@@ -378,35 +450,40 @@
   const vol = document.getElementById("vol");
   const nextTrackBtn = document.getElementById("nextTrackBtn");
   const musicNow = document.getElementById("musicNow");
+  const anthemFile = document.getElementById("anthemFile");
 
   let musicOn = false;
   let trackIndex = 0;
+  let mode = "epic"; // "anthem" then "epic"
 
-  function setNow(){
-    const t = PLAYLIST[trackIndex];
-    musicNow.textContent = t ? `Şimdi çalıyor: ${t.title}` : "Müzik listesi boş.";
+  function setNow(text){ musicNow.textContent = text; }
+
+  function loadEpic(i){
+    if(!EPIC_PLAYLIST.length) return;
+    mode = "epic";
+    trackIndex = (i + EPIC_PLAYLIST.length) % EPIC_PLAYLIST.length;
+    player.src = EPIC_PLAYLIST[trackIndex].src;
+    setNow(`Şimdi çalıyor: ${EPIC_PLAYLIST[trackIndex].title}`);
   }
 
-  function loadTrack(i){
-    if(!PLAYLIST.length) return;
-    trackIndex = (i + PLAYLIST.length) % PLAYLIST.length;
-    player.src = PLAYLIST[trackIndex].src;
-    setNow();
+  function loadAnthemIfAny(){
+    if(!anthemObjectUrl) return false;
+    mode = "anthem";
+    player.src = anthemObjectUrl;
+    setNow("Şimdi çalıyor: İstiklal Marşı (seçtiğin dosya)");
+    return true;
   }
 
   async function tryPlay(){
-    if(!PLAYLIST.length) return;
-    if(!player.src) loadTrack(trackIndex);
     player.volume = parseFloat(vol.value || "0.8");
     try{
       await player.play();
       musicOn = true;
       musicBtn.textContent = "Müzik: Açık";
-    }catch(e){
-      // Autoplay engeli vb.
+    }catch{
       musicOn = false;
       musicBtn.textContent = "Müzik: Kapalı";
-      musicNow.textContent = "Müzik çalamadı. Dosya yoksa /audio/ içine mp3 ekle. (Mobilde Başlat ile açılır)";
+      setNow("Müzik başlayamadı (mobilde dokunma gerekir) veya dosya yok.");
     }
   }
 
@@ -416,27 +493,49 @@
     musicBtn.textContent = "Müzik: Kapalı";
   }
 
+  anthemFile.addEventListener("change", (e)=>{
+    const f = e.target.files && e.target.files[0];
+    if(!f) return;
+    if(anthemObjectUrl) URL.revokeObjectURL(anthemObjectUrl);
+    anthemObjectUrl = URL.createObjectURL(f);
+    setNow("İstiklal Marşı dosyası seçildi. Başlatınca girişte çalacak.");
+  });
+
   player.addEventListener("ended", ()=>{
     if(!musicOn) return;
-    loadTrack(trackIndex+1);
+    if(mode === "anthem"){
+      // marş bitti -> epik listeye geç
+      loadEpic(0);
+      tryPlay();
+      return;
+    }
+    loadEpic(trackIndex+1);
     tryPlay();
   });
 
   musicBtn.addEventListener("click", ()=>{
     if(musicOn) stopMusic();
-    else tryPlay();
+    else{
+      if(!player.src){
+        // Önce marş varsa onu, yoksa epik
+        if(!loadAnthemIfAny()) loadEpic(0);
+      }
+      tryPlay();
+    }
   });
 
-  vol.addEventListener("input", ()=>{
-    player.volume = parseFloat(vol.value || "0.8");
-  });
-
+  vol.addEventListener("input", ()=>{ player.volume = parseFloat(vol.value || "0.8"); });
   nextTrackBtn.addEventListener("click", ()=>{
-    loadTrack(trackIndex+1);
+    if(mode==="anthem"){
+      // marşı geç
+      loadEpic(0);
+    }else{
+      loadEpic(trackIndex+1);
+    }
     if(musicOn) tryPlay();
   });
 
-  // =============== helpers ===============
+  // ================== CHESS ==================
   const FILES = "abcdefgh";
   const RANKS = "87654321";
   function isUpper(ch){ return ch >= 'A' && ch <= 'Z'; }
@@ -573,6 +672,8 @@
             const rr=r+dir, cc=c+dc;
             if(!inBounds(rr,cc)) continue;
             const cap=this.board[rr][cc];
+            // ŞAH YENEMEZ: hedef şah ise hamleyi üretme
+            if(cap && typeOf(cap)==='k') continue;
             if(cap && colorOf(cap)===opp){
               if(rr===promoRank){
                 for(const pr of ['q','r','b','n']) push(from,{r:rr,c:cc},{piece:p,captured:cap,promotion:us==='w'?pr.toUpperCase():pr});
@@ -595,6 +696,7 @@
           for(const [dr,dc] of steps){
             const rr=r+dr, cc=c+dc; if(!inBounds(rr,cc)) continue;
             const target=this.board[rr][cc];
+            if(target && typeOf(target)==='k') continue; // ŞAH YENEMEZ
             if(!target) push(from,{r:rr,c:cc},{piece:p});
             else if(colorOf(target)===opp) push(from,{r:rr,c:cc},{piece:p,captured:target});
           }
@@ -608,6 +710,7 @@
             let rr=r+dr, cc=c+dc;
             while(inBounds(rr,cc)){
               const target=this.board[rr][cc];
+              if(target && typeOf(target)==='k') break; // ŞAH YENEMEZ (hat üzerinde dur)
               if(!target) push(from,{r:rr,c:cc},{piece:p});
               else { if(colorOf(target)===opp) push(from,{r:rr,c:cc},{piece:p,captured:target}); break; }
               rr+=dr; cc+=dc;
@@ -620,6 +723,7 @@
             if(dr===0&&dc===0) continue;
             const rr=r+dr, cc=c+dc; if(!inBounds(rr,cc)) continue;
             const target=this.board[rr][cc];
+            if(target && typeOf(target)==='k') continue; // teori: iki şah yan yana olamaz
             if(!target) push(from,{r:rr,c:cc},{piece:p});
             else if(colorOf(target)===opp) push(from,{r:rr,c:cc},{piece:p,captured:target});
           }
@@ -644,9 +748,12 @@
     }
 
     makeMove(move){
-      this.history.push({ fen:this.fen(), sanLen:this.sanHistory.length, openLen:this.openingMoves.length });
       const us=this.turn, opp=us==='w'?'b':'w';
       const piece=this.board[move.from.r][move.from.c];
+
+      // ekstra güvenlik: “şah ele geçirme” hamlesini reddet
+      const directTarget = this.board[move.to.r][move.to.c];
+      if(directTarget && typeOf(directTarget)==='k') return null;
 
       const captured = move.enPassant ? (() => {
         const dir = us==='w' ? -1 : 1;
@@ -682,10 +789,6 @@
       if(piece==='R' && move.from.r===7 && move.from.c===7) this.castling.K=false;
       if(piece==='r' && move.from.r===0 && move.from.c===0) this.castling.q=false;
       if(piece==='r' && move.from.r===0 && move.from.c===7) this.castling.k=false;
-      if(captured==='R' && move.to.r===7 && move.to.c===0) this.castling.Q=false;
-      if(captured==='R' && move.to.r===7 && move.to.c===7) this.castling.K=false;
-      if(captured==='r' && move.to.r===0 && move.to.c===0) this.castling.q=false;
-      if(captured==='r' && move.to.r===0 && move.to.c===7) this.castling.k=false;
 
       if(us==='b') this.fullmove++;
       this.turn = opp;
@@ -701,7 +804,8 @@
       const leg=[];
       for(const m of pseudo){
         const g=this.clone();
-        g.makeMove(m);
+        const made=g.makeMove(m);
+        if(!made) continue;
         const mover = g.turn==='w'?'b':'w';
         if(!g.inCheck(mover)) leg.push(m);
       }
@@ -719,7 +823,6 @@
     }
 
     sanFor(move){
-      const us=this.turn;
       const piece=this.board[move.from.r][move.from.c];
       const t=typeOf(piece);
 
@@ -738,20 +841,6 @@
       } else {
         const letter = ({n:"N",b:"B",r:"R",q:"Q",k:"K"})[t];
         san += letter;
-
-        const leg=this.legalMoves();
-        const same = leg.filter(m=>{
-          if(m===move) return false;
-          const p2=this.board[m.from.r][m.from.c];
-          return p2===piece && m.to.r===move.to.r && m.to.c===move.to.c;
-        });
-        if(same.length){
-          const needFile = same.some(m=>m.from.c!==move.from.c);
-          const needRank = same.some(m=>m.from.r!==move.from.r);
-          if(needFile) san += FILES[move.from.c];
-          if(needRank) san += RANKS[move.from.r];
-          if(!needFile && !needRank) san += FILES[move.from.c];
-        }
         if(isCap) san += "x";
         san += toSq;
       }
@@ -780,7 +869,7 @@
     }
   }
 
-  // OPENING tiny detector
+  // OPENING detector (basit)
   const OPENINGS = [
     {name:"Ruy Lopez (İspanyol)", line:["e2e4","e7e5","g1f3","b8c6","f1b5"]},
     {name:"İtalyan", line:["e2e4","e7e5","g1f3","b8c6","f1c4"]},
@@ -847,7 +936,7 @@
     }
   }
 
-  // UI elems
+  // UI
   const boardEl=document.getElementById("board");
   const turnLbl=document.getElementById("turnLbl");
   const stateLbl=document.getElementById("stateLbl");
@@ -857,6 +946,14 @@
   const movesBox=document.getElementById("movesBox");
   const kaganText=document.getElementById("kaganText");
   const dedeText=document.getElementById("dedeText");
+
+  const goalGames=document.getElementById("goalGames");
+  const saveGoalBtn=document.getElementById("saveGoalBtn");
+  const todayLbl=document.getElementById("todayLbl");
+  const progressLbl=document.getElementById("progressLbl");
+  const bar=document.getElementById("bar");
+  const resultLbl=document.getElementById("resultLbl");
+  const dailyAnalysisLbl=document.getElementById("dailyAnalysisLbl");
 
   const aiLevelSel=document.getElementById("aiLevel");
   const resetBtn=document.getElementById("resetBtn");
@@ -879,9 +976,85 @@
   let thinking=false;
   let pendingPromotion=null;
 
+  // Koç & Dede
+  const KAGAN_OPEN_CMD = [
+    "“Merkeze hükmet!”",
+    "“Taşlarını çıkar, veziri sakla!”",
+    "“Şahını güvene al: Rok vakti!”",
+    "“Gereksiz piyon sürme!”",
+    "“Atlarını ileri sür, filini aç!”",
+    "“Hatları aç; kaleler konuşsun!”",
+    "“Zayıf piyona yüklen!”",
+    "“Taşlarını boşa harcama!”",
+    "“Tehdidi gör, sonra yürü!”",
+    "“Sabırla sıkıştır!”",
+  ];
+  const KAGAN_MID_CMD = [
+    "“Hedef seç: zayıf piyon!”",
+    "“Baskıyı artır; geri çekilme!”",
+    "“Değişimi lehine yap!”",
+    "“Kale dosyaya girsin!”",
+    "“Taşların uyumu bozulmasın!”",
+    "“Merkez kır; düzeni boz!”",
+    "“Şah güvenliği, zaferin kapısıdır!”",
+    "“İki hamle sonrasını gör!”",
+  ];
+  const KAGAN_END_CMD = [
+    "“Şah da askerdir: ileri!”",
+    "“Geçer piyonu sür; sancak ondadır!”",
+    "“Basitleştir, sonu getir!”",
+    "“Kale etkinliğiyle bitir!”",
+    "“Bir hamle, bir kader!”",
+  ];
+
+  const DEDE_OPEN = [
+    "Ey yiğidim, açılışın direği <b>gelişim</b>dir; veziri erken koşturma.",
+    "Dinle oğul: <b>merkez</b> piyonları obanın otağıdır; orayı boş koyma.",
+    "Rok, yiğidin zırhıdır; geciktirirsen ok yer.",
+  ];
+  const DEDE_MID = [
+    "Orta oyun derin ırmaktır; taşlarını bir arada tut ki boğulmayasın.",
+    "Zayıf kare, açık yaradır; merhem bas, baskıyı artır.",
+    "Taşlar ayrı düşerse ordu bölünür; düzen bozulmasın.",
+  ];
+  const DEDE_END = [
+    "Son oyun çıplak kılıçtır; şah da askere döner, ileri yürür.",
+    "Geçer piyon, sancağı taşır; önünü aç, sona var.",
+    "Az taş, net töre: sadeleştir, zaferi al.",
+  ];
+  const DEDE_PRAISE = ["Helal olsun yiğidim; hamlen yerini buldu.","Akıl ile oynadın; taşların söz dinledi.","Güzel yürüdün; töreye uygun hamle."];
+  const DEDE_WARN = ["Oğul, bu hamlede acele var; düşünmeden kılıç sallanmaz.","Dikkat et yiğidim; taşın açıkta kaldı, düşman göz koyar.","Bu yürüyüşte gedik var; obayı koru."];
+  const DEDE_BAD  = ["Ah yiğidim… Bu hamleyle kapı aralandı; düşman içeri sızar.","Yanlış adım attın oğul; taşın bedeli ağır olabilir.","Gözün görmedi; bu hamle gönle ağır gelir."];
+
+  function pick(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+
   function displayToCoord(dr,dc){
     if(!flipped) return {r:dr,c:dc};
     return {r:7-dr,c:7-dc};
+  }
+
+  function renderDaily(){
+    // gün değişti mi kontrol
+    if(daily.date !== todayKey()){
+      daily = defaultState();
+      saveState(daily);
+    }
+
+    goalGames.value = daily.goalGames;
+    todayLbl.textContent = daily.date;
+
+    const pct = Math.max(0, Math.min(100, Math.round((daily.gamesPlayed / Math.max(1,daily.goalGames)) * 100)));
+    progressLbl.textContent = `${daily.gamesPlayed} / ${daily.goalGames} (%${pct})`;
+    bar.style.width = pct + "%";
+
+    resultLbl.textContent = `W:${daily.wins}  D:${daily.draws}  L:${daily.losses}`;
+
+    const avg = (daily.swingSamples ? daily.avgSwingAbs : 0).toFixed(2);
+    dailyAnalysisLbl.innerHTML =
+      `İyi:${daily.goodMoves} · İsabetsiz:${daily.inaccuracies} · Hata:${daily.blunders}<br>` +
+      `Ortalama sapma: <b>${avg}</b>`;
+
+    saveState(daily);
   }
 
   function render(){
@@ -934,7 +1107,8 @@
     }
 
     renderMoves();
-    renderKaganHint();
+    renderKaganDede();
+    renderDaily();
   }
 
   function renderMoves(){
@@ -949,6 +1123,21 @@
     }
   }
 
+  function renderKaganDede(){
+    const ply=game.sanHistory.length;
+    const opening=detectOpening(game.openingMoves);
+    const cmd =
+      (ply<=8) ? pick(KAGAN_OPEN_CMD) :
+      (ply<=28) ? pick(KAGAN_MID_CMD) :
+      pick(KAGAN_END_CMD);
+
+    kaganText.innerHTML = `<span class="good">Kağan:</span> ${cmd} ${opening!=="-" ? ` <span class="tag">Açılış: <b>${opening}</b></span>` : ""}`;
+
+    if(ply===0){
+      dedeText.innerHTML = `<span class="warn">Dede:</span> <span style="color:var(--muted)">${pick(DEDE_OPEN)}</span>`;
+    }
+  }
+
   function legalMovesFrom(r,c){
     return game.legalMoves().filter(m=>m.from.r===r && m.from.c===c);
   }
@@ -960,10 +1149,10 @@
     const text=isWhite
       ?"Terfi seç: Q=Vezir, R=Kale, B=Fil, N=At (örn: Q)"
       :"Terfi seç: q=Vezir, r=Kale, b=Fil, n=At (örn: q)";
-    let pick=prompt(text, isWhite?"Q":"q");
-    if(!pick){ pendingPromotion=null; return; }
-    pick=pick.trim();
-    const want=options.includes(pick)?pick:(isWhite?"Q":"q");
+    let pickv=prompt(text, isWhite?"Q":"q");
+    if(!pickv){ pendingPromotion=null; return; }
+    pickv=pickv.trim();
+    const want=options.includes(pickv)?pickv:(isWhite?"Q":"q");
     const mv=candidates.find(m=>m.promotion===want) || candidates[0];
     pendingPromotion=null;
     playMove(mv,{byAI:false});
@@ -997,122 +1186,56 @@
     }
   }
 
-  // ====== Kağan (Koç) + Dede (Analist) ======
-  const KAGAN_OPEN_CMD = [
-    "“Merkeze hükmet!”",
-    "“Taşlarını çıkar, veziri sakla!”",
-    "“Şahını güvene al: Rok vakti!”",
-    "“Gereksiz piyon sürme!”",
-    "“Atlarını ileri sür, filini aç!”",
-  ];
-  const KAGAN_MID_CMD = [
-    "“Hedef seç: zayıf piyon!”",
-    "“Hat aç: kale etkin olsun!”",
-    "“Taşların uyumunu bozma!”",
-    "“Baskıyı artır; geri çekilme!”",
-    "“Değişimleri lehine yap!”",
-  ];
-  const KAGAN_END_CMD = [
-    "“Şah da askerdir: ileri!”",
-    "“Geçer piyonu sür; sancak ondadır!”",
-    "“Basitleştir, sonu getir!”",
-    "“Kale etkinliğiyle bitir!”",
-    "“Bir hamle, bir kader!”",
-  ];
-  const KAGAN_QUOTES = [
-    "“Her Türk asker doğar. Görev değişir; töre değişmez.”",
-    "“Merkezi tut. Şahını koru. Zafer sabırla gelir.”",
-    "“Düşmanı küçümseme; tek hamle kaderi yazar.”",
-    "“Taşlarını geliştir; sonra hücum et.”"
-  ];
-
-  // Dede Korkut üslubu şablonlar
-  const DEDE_OPEN = [
-    "Ey yiğidim, açılışın direği <b>gelişim</b>dir; veziri erken koşturma.",
-    "Dinle oğul: <b>merkez</b> piyonları obanın otağıdır; orayı boş koyma.",
-    "Rok, yiğidin zırhıdır; geciktirirsen ok yer.",
-  ];
-  const DEDE_MID = [
-    "Orta oyun derin ırmaktır; taşlarını bir arada tut ki boğulmayasın.",
-    "Zayıf kare, açık yaradır; merhem bas, baskıyı artır.",
-    "Taşlar ayrı düşerse ordu bölünür; düzen bozulmasın.",
-  ];
-  const DEDE_END = [
-    "Son oyun çıplak kılıçtır; şah da askere döner, ileri yürür.",
-    "Geçer piyon, sancağı taşır; önünü aç, sona var.",
-    "Az taş, net töre: sadeleştir, zaferi al.",
-  ];
-  const DEDE_PRAISE = [
-    "Helal olsun yiğidim; hamlen yerini buldu.",
-    "Akıl ile oynadın; taşların söz dinledi.",
-    "Güzel yürüdün; töreye uygun hamle.",
-  ];
-  const DEDE_WARN = [
-    "Oğul, bu hamlede acele var; düşünmeden kılıç sallanmaz.",
-    "Dikkat et yiğidim; taşın açıkta kaldı, düşman göz koyar.",
-    "Bu yürüyüşte gedik var; obayı koru.",
-  ];
-  const DEDE_BAD = [
-    "Ah yiğidim… Bu hamleyle kapı aralandı; düşman içeri sızar.",
-    "Yanlış adım attın oğul; taşın bedeli ağır olabilir.",
-    "Gözün görmedi; bu hamle gönle ağır gelir.",
-  ];
-
-  function pick(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
-
-  function renderKaganHint(){
+  function updateDede(san, quality){
     const ply=game.sanHistory.length;
-    const opening=detectOpening(game.openingMoves);
-    const cmd =
-      (ply<=8) ? pick(KAGAN_OPEN_CMD) :
-      (ply<=28) ? pick(KAGAN_MID_CMD) :
-      pick(KAGAN_END_CMD);
-
-    if(ply===0){
-      kaganText.innerHTML = `<span class="good">Kağan:</span> ${KAGAN_QUOTES[0]} <span class="warn">İlk hamleni yap.</span>`;
-      return;
-    }
-    kaganText.innerHTML = `<span class="good">Kağan:</span> ${cmd} ${opening!=="-" ? ` <span class="tag">Açılış: <b>${opening}</b></span>` : ""}`;
-  }
-
-  function dedeBaseByPhase(ply){
-    if(ply<=10) return pick(DEDE_OPEN);
-    if(ply<=30) return pick(DEDE_MID);
-    return pick(DEDE_END);
-  }
-
-  function updateDedeAfterMove(san, quality){
-    const ply=game.sanHistory.length;
-    const opening=detectOpening(game.openingMoves);
-
-    const base = dedeBaseByPhase(ply);
-    const op = (opening!=="-") ? ` <span class="tag">Açılış izi: <b>${opening}</b></span>` : "";
-
+    const base = (ply<=10)?pick(DEDE_OPEN):(ply<=30)?pick(DEDE_MID):pick(DEDE_END);
     let tone = "";
     if(quality==="good") tone = `<span class="good">${pick(DEDE_PRAISE)}</span>`;
     else if(quality==="warn") tone = `<span class="warn">${pick(DEDE_WARN)}</span>`;
     else tone = `<span class="bad">${pick(DEDE_BAD)}</span>`;
-
-    dedeText.innerHTML =
-      `<span class="warn">Dede:</span> <b>${san}</b> ${op}<br>` +
-      `${tone}<br><span style="color:var(--muted)">${base}</span>`;
+    dedeText.innerHTML = `<span class="warn">Dede:</span> <b>${san}</b><br>${tone}<br><span style="color:var(--muted)">${base}</span>`;
   }
 
-  // ====== move play + analysis ======
+  function finalizeGameIfOver(){
+    const over = game.isGameOver();
+    if(!over.over) return false;
+
+    // Günlük sayaç: oyun bitti say
+    daily.gamesPlayed++;
+
+    // Sonuç belirle (basit): Mat olan taraf kaybeder
+    if(over.result==="mat"){
+      // hamle sırası kimdeyse mat olmuştur ve kaybetmiştir
+      // yani kazanan = karşı taraf
+      const loser = game.turn; // mat olanın sırası gelir ama hamle yok
+      const winner = loser==='w' ? 'b' : 'w';
+      if(winner==='w') daily.wins++; else daily.losses++;
+    } else if(over.result==="pat" || over.result==="50"){
+      daily.draws++;
+    } else {
+      daily.draws++;
+    }
+
+    saveState(daily);
+    renderDaily();
+    return true;
+  }
+
   function playMove(move,{byAI}){
     const san = game.sanFor(move);
 
-    // basit “kalite” etiketi (shallow best ile kıyas)
+    // kalite ölçümü (shallow best kıyası)
     const depth = Math.min(2, chooseDepth(parseInt(aiLevelSel.value,10)));
     const bestRes = minimax(game.clone(), depth, -Infinity, Infinity);
-    const beforeEval = game.evaluate();
-    let bestEval = beforeEval;
+    let bestEval = game.evaluate();
     if(bestRes.best){
       const gB=game.clone(); gB.makeMove(bestRes.best);
       bestEval = gB.evaluate();
     }
 
-    game.makeMove(move);
+    const made = game.makeMove(move);
+    if(!made){ render(); return; } // (şah yakalama vb.) reddedilmiş olabilir
+
     game.sanHistory.push(san);
     lastMoveSquares = {from: move.from, to: move.to};
     lastMoveLbl.textContent = san;
@@ -1120,20 +1243,22 @@
     const afterEval = game.evaluate();
     const sideJustMoved = game.turn==='w' ? 'b' : 'w';
     const swing = (afterEval - bestEval) * (sideJustMoved==='w' ? 1 : -1);
+    const absSwing = Math.abs(swing);
+    updateDailySwing(absSwing);
 
-    let quality = "warn";
-    if(Math.abs(swing) < 0.15) quality = "good";
-    else if(Math.abs(swing) < 0.55) quality = "warn";
-    else quality = "bad";
+    let quality="warn";
+    if(absSwing < 0.15){ quality="good"; daily.goodMoves++; }
+    else if(absSwing < 0.55){ quality="warn"; daily.inaccuracies++; }
+    else { quality="bad"; daily.blunders++; }
 
-    updateDedeAfterMove(san, quality);
+    updateDede(san, quality);
 
     selected=null; legalFromSelected=[];
     render();
 
-    if(game.isGameOver().over) return;
+    if(finalizeGameIfOver()) return;
 
-    // AI always plays black
+    // AI black
     if(!byAI && game.turn==='b'){
       setTimeout(aiMove, 40);
     }
@@ -1157,7 +1282,7 @@
       if(!mv){ render(); return; }
       playMove(mv,{byAI:true});
       render();
-    }, 50);
+    }, 60);
   }
 
   function reset(){
@@ -1167,8 +1292,6 @@
     thinking=false;
     pendingPromotion=null;
     lastMoveLbl.textContent="-";
-    kaganText.innerHTML=`<span class="good">Kağan:</span> ${pick(KAGAN_QUOTES)} <span class="warn">İlk hamleni yap.</span>`;
-    dedeText.innerHTML=`<span class="warn">Dede:</span> <span style="color:var(--muted)">${pick(DEDE_OPEN)}</span>`;
     render();
   }
 
@@ -1176,22 +1299,35 @@
   resetBtn.addEventListener("click", reset);
   aiLevelSel.addEventListener("change", ()=>render());
 
-  // Splash controls (müzik: Başlat ile)
-  function closeSplash({withMusic}){
-    splash.classList.add("hide");
-    kaganText.innerHTML=`<span class="good">Kağan:</span> ${pick(KAGAN_QUOTES)} <span class="warn">İlk hamleni yap.</span>`;
-    dedeText.innerHTML=`<span class="warn">Dede:</span> <span style="color:var(--muted)">${pick(DEDE_OPEN)}</span>`;
-    if(withMusic){
-      loadTrack(0);
-      tryPlay();
-    }
-  }
-  startBtn.addEventListener("click", ()=>closeSplash({withMusic:true}));
-  startSilentBtn.addEventListener("click", ()=>closeSplash({withMusic:false}));
+  saveGoalBtn.addEventListener("click", ()=>{
+    const g = parseInt(goalGames.value||"5",10);
+    daily.goalGames = Math.max(1, Math.min(200, isFinite(g)?g:5));
+    saveState(daily);
+    renderDaily();
+  });
 
-  // init
-  loadTrack(0);
+  // Splash controls: müzikli başlat -> marş varsa önce marş, sonra epik
+  function closeSplash(withMusic){
+    splash.classList.add("hide");
+    if(withMusic){
+      // önce marş varsa
+      if(!loadAnthemIfAny()){
+        loadEpic(0);
+      }
+      tryPlay();
+    }else{
+      stopMusic();
+    }
+    render();
+  }
+  startBtn.addEventListener("click", ()=>closeSplash(true));
+  startSilentBtn.addEventListener("click", ()=>closeSplash(false));
+
+  // init music state
+  loadEpic(0);
   stopMusic();
+
+  // init render
   render();
 })();
 </script>

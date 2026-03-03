@@ -1,248 +1,589 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Bozkurt Ordusu</title>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1" />
+<title>Bozkurt Ordusu (Börüler)</title>
 
 <style>
-body{
-  margin:0;
-  font-family:Arial, sans-serif;
-  background:#0f172a;
-  color:white;
-  text-align:center;
-}
-h1{margin-top:10px}
-.board{
-  width:95vw;
-  max-width:500px;
-  aspect-ratio:1/1;
-  margin:20px auto;
-  display:grid;
-  grid-template-columns:repeat(8,1fr);
-}
-.square{
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  font-size:6vw;
-}
-.white{background:#f0d9b5}
-.black{background:#b58863}
-.infoBox{
-  margin:10px;
-  padding:10px;
-  background:#1e293b;
-  border-radius:10px;
-}
-button,select{
-  padding:8px;
-  margin:5px;
-  border-radius:6px;
-  border:none;
-}
-.progress{
-  height:10px;
-  background:#333;
-  border-radius:10px;
-  overflow:hidden;
-}
-.progressBar{
-  height:100%;
-  background:#16a34a;
-  width:0%;
-}
-iframe{
-  border-radius:12px;
-}
+  :root{
+    --bg:#0f172a;
+    --panel:#1e293b;
+    --text:#ffffff;
+    --muted:#b6c2da;
+    --light:#f0d9b5;
+    --dark:#b58863;
+    --good:#22c55e;
+    --warn:#fbbf24;
+    --bad:#fb7185;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0;
+    font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;
+    background:var(--bg);
+    color:var(--text);
+    text-align:center;
+  }
+  h1{margin:10px 0 4px}
+  .sub{margin:0 0 10px;color:var(--muted);font-size:13px}
+
+  .titleRow{
+    display:flex;gap:10px;justify-content:center;flex-wrap:wrap;
+    margin:6px 10px 6px;
+  }
+  .titlePill{
+    background:rgba(255,255,255,.06);
+    border:1px solid rgba(255,255,255,.10);
+    padding:8px 12px;border-radius:999px;
+    font-weight:800;
+  }
+  .titlePill small{font-weight:700;color:var(--muted)}
+
+  .wrap{
+    max-width:1050px;
+    margin:0 auto;
+    padding:10px;
+    display:grid;
+    gap:12px;
+    grid-template-columns:1fr;
+  }
+  @media(min-width:920px){
+    .wrap{grid-template-columns: 1.05fr .95fr;}
+  }
+
+  /* BOARD: kareler tam eşit */
+  .board{
+    width:min(94vw, 520px);
+    aspect-ratio:1/1;
+    margin:10px auto 0;
+    display:grid;
+    grid-template-columns:repeat(8,1fr);
+    grid-template-rows:repeat(8,1fr);
+    border-radius:12px;
+    overflow:hidden;
+    border:10px solid rgba(255,255,255,.06);
+    box-shadow:0 18px 45px rgba(0,0,0,.45);
+    user-select:none;
+    -webkit-user-select:none;
+    touch-action:manipulation;
+    background:#000;
+  }
+  .square{
+    aspect-ratio:1/1;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    position:relative;
+    font-size: clamp(28px, 7vw, 46px);
+    cursor:pointer;
+  }
+  .white{background:var(--light)}
+  .black{background:var(--dark)}
+
+  .sel{outline:3px solid rgba(255,215,0,.95);outline-offset:-3px}
+  .hint::before{content:"";position:absolute;width:18%;height:18%;border-radius:999px;background:rgba(34,197,94,.65);}
+  .cap::before{content:"";position:absolute;width:70%;height:70%;border-radius:999px;border:4px solid rgba(251,113,133,.70);}
+
+  /* Taş renkleri NET */
+  .piece{line-height:1;transform:translateZ(0)}
+  .piece.w{
+    color:#f8fafc;
+    text-shadow:
+      0 2px 0 rgba(0,0,0,.25),
+      0 0 10px rgba(255,255,255,.35),
+      0 0 2px rgba(0,0,0,.25);
+  }
+  .piece.b{
+    color:#0b0f1a;
+    text-shadow:
+      0 0 2px rgba(255,255,255,.80),
+      0 0 10px rgba(255,255,255,.35),
+      0 3px 0 rgba(0,0,0,.55);
+    filter:contrast(1.25);
+  }
+
+  .panel{
+    background:var(--panel);
+    border:1px solid rgba(255,255,255,.08);
+    border-radius:14px;
+    padding:12px;
+    text-align:left;
+  }
+  .panel h3{margin:0 0 8px;font-size:16px}
+  .muted{color:var(--muted)}
+  .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:8px 0}
+  button,select,input[type="number"]{
+    padding:10px 12px;
+    border-radius:10px;
+    border:1px solid rgba(255,255,255,.12);
+    background:rgba(255,255,255,.06);
+    color:var(--text);
+    font-size:14px;
+    outline:none;
+  }
+  button.primary{
+    background:linear-gradient(180deg, rgba(34,197,94,.95), rgba(34,197,94,.70));
+    border-color: rgba(34,197,94,.35);
+    font-weight:850;
+  }
+  .progress{
+    height:12px;
+    background:rgba(255,255,255,.08);
+    border-radius:999px;
+    overflow:hidden;
+    border:1px solid rgba(255,255,255,.10);
+  }
+  .progressBar{
+    height:100%;
+    width:0%;
+    background:linear-gradient(90deg, rgba(34,197,94,.95), rgba(59,130,246,.75));
+  }
+  iframe{
+    width:100%;
+    height:200px;
+    border:0;
+    border-radius:12px;
+    background:rgba(0,0,0,.25);
+  }
+
+  .box{
+    background:rgba(0,0,0,.18);
+    border:1px solid rgba(255,255,255,.10);
+    border-radius:12px;
+    padding:10px;
+    margin-top:10px;
+  }
+  .labelLine{
+    font-weight:900;
+    margin-bottom:6px;
+  }
+  .labelLine span{color:var(--muted);font-weight:700}
 </style>
 </head>
 <body>
 
-<h1>🇹🇷 Bozkurt Ordusu</h1>
-<h3>𐰴𐰍𐰣 – Kağan</h3>
-<h4>𐰑𐰓𐰑𐰓 – Dede</h4>
+<h1>🇹🇷 Bozkurt Ordusu <span style="opacity:.75">(Börüler)</span></h1>
+<div class="sub">Töre ile oyna. Akıl ile kazan.</div>
 
-<div class="board" id="board"></div>
-
-<div class="infoBox" id="kaganBox"></div>
-<div class="infoBox" id="dedeBox"></div>
-
-<div class="infoBox">
-<h3>Günlük Hedef</h3>
-Oynanan: <span id="played">0</span> /
-Hedef: <input type="number" id="goalInput" value="5" style="width:50px">
-<div class="progress"><div class="progressBar" id="progressBar"></div></div>
+<!-- ÜSTTE GÖSTERİM -->
+<div class="titleRow">
+  <div class="titlePill">Kağan <small>𐰴𐰍𐰣</small></div>
+  <div class="titlePill">Dede <small>𐰑𐰓𐰑𐰓</small></div>
 </div>
 
-<div class="infoBox">
-<h3>Türk Müzikleri</h3>
-<select id="playlistSelect"></select>
-<button onclick="playSelected()">Çal</button>
-<button onclick="nextSong()">Sonraki</button>
-<button onclick="stopMusic()">Durdur</button>
+<div class="wrap">
+  <!-- SOL: TAHTA -->
+  <div class="panel" style="text-align:center">
+    <div class="muted" id="stateLine">Hazır</div>
+    <div class="board" id="board"></div>
+    <div class="muted" style="margin-top:8px">
+      Şah <b>yenilmez</b>. Oyun <b>MAT</b> / <b>PAT</b> ile biter.
+    </div>
+  </div>
 
-<iframe id="ytPlayer"
-width="100%"
-height="180"
-allow="autoplay"
-src="">
-</iframe>
+  <!-- SAĞ: KAĞAN/DEDE + HEDEF + MÜZİK -->
+  <div class="panel">
+    <!-- AŞAĞIDA DA GÖSTERİM (istediğin gibi) -->
+    <div class="box">
+      <div class="labelLine">Kağan <span>(𐰴𐰍𐰣)</span></div>
+      <div id="kaganBox" class="muted">Er meydanı kuruldu. Börüler düzen alsın.</div>
+    </div>
+
+    <div class="box">
+      <div class="labelLine">Dede <span>(𐰑𐰓𐰑𐰓)</span></div>
+      <div id="dedeBox" class="muted">Yiğit, ilk hamleni beklerim.</div>
+    </div>
+
+    <div class="box">
+      <div class="labelLine">Günlük Hedef</div>
+      <div class="row">
+        <span class="muted">Oynanan:</span> <b id="played">0</b>
+        <span class="muted">Hedef:</span>
+        <input type="number" id="goalInput" min="1" max="200" value="5" style="width:90px" />
+        <button id="saveGoalBtn">Kaydet</button>
+      </div>
+      <div class="progress"><div class="progressBar" id="progressBar"></div></div>
+      <div class="muted" style="margin-top:6px" id="progressText">0 / 5 (%0)</div>
+    </div>
+
+    <div class="box">
+      <div class="labelLine">Türk Müzikleri</div>
+      <div class="row">
+        <select id="playlistSelect" style="flex:1;min-width:220px"></select>
+        <button class="primary" id="playBtn">Çal</button>
+        <button id="nextBtn">Sonraki</button>
+        <button id="stopBtn">Durdur</button>
+      </div>
+      <div class="muted" id="nowPlaying">Seç ve “Çal”a bas.</div>
+      <div style="margin-top:10px">
+        <div id="ytMount"></div>
+      </div>
+      <div class="muted" style="margin-top:8px;font-size:12.5px;line-height:1.4">
+        Güvenlik: Liste <b>sabit</b>. Dışarıdan link girme yok, başka video açma yok.
+      </div>
+    </div>
+  </div>
 </div>
 
+<!-- Chess.js -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
+<!-- YouTube IFrame API -->
+<script src="https://www.youtube.com/iframe_api"></script>
 
 <script>
+/* =========================
+   1) SATRANÇ
+========================= */
+const PIECE_UNI = {
+  p:"♟", r:"♜", n:"♞", b:"♝", q:"♛", k:"♚"
+};
 
 const game = new Chess();
-const board = document.getElementById("board");
+const boardEl = document.getElementById("board");
+const stateLine = document.getElementById("stateLine");
+const kaganBox = document.getElementById("kaganBox");
+const dedeBox  = document.getElementById("dedeBox");
+
 let selected = null;
 
-function drawBoard(){
-  board.innerHTML="";
-  const squares = game.board();
+// Dede Korkut üslubu (kısa set)
+const DEDE_NORMAL = [
+  "Yiğit, taşını yerli yerine koydu.",
+  "Akıl ile yürüdün; yolun açıktır.",
+  "Taş yerini buldu; obanın düzeni bozulmadı."
+];
+const DEDE_CAPTURE = [
+  "Er, er ile çarpıştı; biri meydandan düştü.",
+  "Kılıç indi; bir taş eksildi.",
+  "Yürekle yürüdün; düşman geriledi."
+];
+const DEDE_CHECK = [
+  "Şah darda kaldı, akıl gerek şimdi.",
+  "Şahın üstüne gölge düştü; dikkat gerek.",
+  "Düşmanın şahı sarsıldı; iş büyür."
+];
+const DEDE_MATE_WIN = [
+  "Sabreden er muradına erdi.",
+  "Töre ile yürüdün; son söz senindir.",
+  "Börü gibi sabrettin; zafer geldi."
+];
+const DEDE_MATE_LOSE = [
+  "Her yenilgi öğüttür; yiğit yılmaz.",
+  "Bugün düşsen de yarın kalkarsın; töre böyledir.",
+  "Akıl yorulur, ama er yılmaz; yeniden dene."
+];
+const KAGAN_EMIR = [
+  "Merkeze hükmet!",
+  "Şahını gözet!",
+  "Taşlarını çıkar!",
+  "Gereksiz piyon sürme!",
+  "Kale dosyaya girsin!",
+  "İki hamle sonrasını gör!",
+  "Baskıyı artır!"
+];
+
+function pick(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+
+function renderBoard(){
+  boardEl.innerHTML = "";
+  const b = game.board(); // 8x8
+
   for(let r=0;r<8;r++){
     for(let c=0;c<8;c++){
-      const square=document.createElement("div");
-      square.className="square "+((r+c)%2==0?"white":"black");
-      square.dataset.square=String.fromCharCode(97+c)+(8-r);
-      if(squares[r][c]){
-        square.textContent=getPieceSymbol(squares[r][c]);
+      const sq = document.createElement("div");
+      sq.className = "square " + (((r+c)%2===0) ? "white" : "black");
+      const file = String.fromCharCode(97+c);
+      const rank = 8-r;
+      const name = file + rank;
+      sq.dataset.square = name;
+
+      // seçili kare
+      if(selected === name) sq.classList.add("sel");
+
+      // legal hamle ipucu
+      if(selected){
+        const moves = game.moves({square:selected, verbose:true});
+        for(const m of moves){
+          if(m.to === name){
+            sq.classList.add(m.captured ? "cap" : "hint");
+          }
+        }
       }
-      square.onclick=()=>onSquareClick(square.dataset.square);
-      board.appendChild(square);
+
+      // taş
+      const p = b[r][c];
+      if(p){
+        const sp = document.createElement("span");
+        sp.className = "piece " + (p.color === "w" ? "w" : "b");
+        sp.textContent = PIECE_UNI[p.type];
+        sq.appendChild(sp);
+      }
+
+      sq.addEventListener("click", () => onSquareClick(name));
+      boardEl.appendChild(sq);
     }
   }
-}
 
-function getPieceSymbol(piece){
-  const map={
-    p:"♟",r:"♜",n:"♞",b:"♝",q:"♛",k:"♚"
-  };
-  return piece.color==="w"?map[piece.type]:map[piece.type];
-}
-
-function onSquareClick(square){
-  if(selected){
-    const move=game.move({from:selected,to:square,promotion:"q"});
-    selected=null;
-    if(move){
-      playMoveSound();
-      afterMove();
-    }
-  }else{
-    selected=square;
-  }
-  drawBoard();
-}
-
-function afterMove(){
-  if(game.in_check()){
-    playCheckSound();
-    dede("Şah darda kaldı, akıl gerek şimdi.");
-  }else{
-    dede("Yiğit taşını yerli yerine koydu.");
-  }
-
+  // durum
   if(game.in_checkmate()){
-    playMateSound();
-    dede("Sabreden er muradına erdi.");
-    incrementGames();
+    stateLine.textContent = "MAT";
+  } else if(game.in_draw()){
+    stateLine.textContent = "PAT / Beraberlik";
+  } else if(game.in_check()){
+    stateLine.textContent = "ŞAH!";
+  } else {
+    stateLine.textContent = "Hazır";
   }
 }
 
-function kagan(text){
-  document.getElementById("kaganBox").innerText="Kağan: "+text;
-}
-function dede(text){
-  document.getElementById("dedeBox").innerText="Dede: "+text;
+function onSquareClick(name){
+  // seçim yoksa: kendi taşını seç
+  if(!selected){
+    const p = game.get(name);
+    if(p && p.color === game.turn()){
+      selected = name;
+    }
+    renderBoard();
+    return;
+  }
+
+  // seçili varsa hamle dene
+  const move = game.move({from:selected, to:name, promotion:"q"});
+  selected = null;
+
+  if(move){
+    // hamle sesi
+    playMoveSound();
+
+    // Kağan emir güncelle (arada)
+    kaganBox.textContent = pick(KAGAN_EMIR);
+
+    // Dede yorumu
+    if(move.captured){
+      dedeBox.textContent = pick(DEDE_CAPTURE);
+      playCaptureSound();
+    } else {
+      dedeBox.textContent = pick(DEDE_NORMAL);
+    }
+
+    // şah
+    if(game.in_check()){
+      dedeBox.textContent = pick(DEDE_CHECK);
+      playCheckSound();
+    }
+
+    // oyun bitti mi?
+    if(game.in_checkmate()){
+      // kazanan: son hamleyi yapan taraf
+      const winner = (game.turn() === "w") ? "Siyah" : "Beyaz";
+      if(winner === "Beyaz") dedeBox.textContent = pick(DEDE_MATE_WIN);
+      else dedeBox.textContent = pick(DEDE_MATE_LOSE);
+      playMateSound();
+      incrementGames();
+    } else if(game.in_draw()){
+      dedeBox.textContent = "Dede: Beraberlik de töredir; yeniden dene.";
+      incrementGames();
+    }
+  }
+
+  renderBoard();
 }
 
-kagan("Er meydanı kuruldu. Börüler yerini alsın.");
-drawBoard();
+renderBoard();
 
-/* Günlük hedef sistemi */
+/* =========================
+   2) GÜNLÜK HEDEF
+========================= */
+const playedEl = document.getElementById("played");
+const goalInput = document.getElementById("goalInput");
+const saveGoalBtn = document.getElementById("saveGoalBtn");
+const progressBar = document.getElementById("progressBar");
+const progressText = document.getElementById("progressText");
+
+const LS_PLAYED = "bozkurt_played";
+const LS_GOAL   = "bozkurt_goal";
+const LS_DATE   = "bozkurt_date";
+
+function todayKey(){
+  const d=new Date();
+  const y=d.getFullYear();
+  const m=String(d.getMonth()+1).padStart(2,"0");
+  const day=String(d.getDate()).padStart(2,"0");
+  return `${y}-${m}-${day}`;
+}
+
+function ensureDailyReset(){
+  const t=todayKey();
+  const last=localStorage.getItem(LS_DATE);
+  if(last !== t){
+    localStorage.setItem(LS_DATE, t);
+    localStorage.setItem(LS_PLAYED, "0");
+  }
+}
+
+function getPlayed(){ return parseInt(localStorage.getItem(LS_PLAYED) || "0", 10); }
+function setPlayed(v){ localStorage.setItem(LS_PLAYED, String(v)); }
+
+function getGoal(){
+  const g = parseInt(localStorage.getItem(LS_GOAL) || "5", 10);
+  return isFinite(g) ? Math.max(1, Math.min(200, g)) : 5;
+}
+function setGoal(v){
+  const g = Math.max(1, Math.min(200, v));
+  localStorage.setItem(LS_GOAL, String(g));
+}
+
 function incrementGames(){
-  let played=Number(localStorage.getItem("played")||0);
-  played++;
-  localStorage.setItem("played",played);
+  ensureDailyReset();
+  setPlayed(getPlayed()+1);
   updateProgress();
 }
 
 function updateProgress(){
-  const played=Number(localStorage.getItem("played")||0);
-  const goal=Number(document.getElementById("goalInput").value);
-  document.getElementById("played").innerText=played;
-  document.getElementById("progressBar").style.width=
-  Math.min(100,(played/goal)*100)+"%";
+  ensureDailyReset();
+  const played = getPlayed();
+  const goal = getGoal();
+  playedEl.textContent = played;
+  goalInput.value = goal;
+
+  const pct = Math.round(Math.min(100, (played/goal)*100));
+  progressBar.style.width = pct + "%";
+  progressText.textContent = `${played} / ${goal} (%${pct})`;
 }
+
+saveGoalBtn.addEventListener("click", ()=>{
+  const val = parseInt(goalInput.value || "5", 10);
+  setGoal(isFinite(val) ? val : 5);
+  updateProgress();
+});
 
 updateProgress();
 
-/* Müzik sistemi */
-const TURK_PLAYLIST=[
-{title:"İstiklal Marşı",id:"fhIIU_a6bv8"},
-{title:"Enver Paşa",id:"agveHbFsogM"},
-{title:"Bozkurt Ordusu",id:"LAEiecMIFuc"},
-{title:"Dombra",id:"NQCT-nfjVZU"},
-{title:"Er Turan",id:"Z4fKe_EGw7k"},
-{title:"Tengir Azun",id:"pGzG6FzjGgA"},
-{title:"Andımız",id:"hG2L1QacdsM"}
+/* =========================
+   3) MÜZİK (KİLİTLİ PLAYLIST)
+   - Otomatik devam için YouTube Player API
+========================= */
+const TURK_PLAYLIST = [
+  // Not: Bunlar sabit liste. Dışarıdan ekleme yok.
+  { title:"İstiklal Marşı", id:"fhIIU_a6bv8" },
+
+  { title:"Enver Paşa - Hoş Gelişler Ola", id:"agveHbFsogM" },
+  { title:"Kerim Sezer - Yolumuza Pir Olsun", id:"fTMFUNj5NIQ" },
+  { title:"Başbuğumuz Enver", id:"hQSYiuj3SG8" },
+
+  { title:"Bozkurt Ordusu", id:"LAEiecMIFuc" },
+
+  { title:"Dombra", id:"NQCT-nfjVZU" },
+
+  { title:"Er Turan", id:"Z4fKe_EGw7k" },
+
+  // Tengir Azun için ID’yi senin teyit etmen iyi olur.
+  // Eğer bu ID çalışmazsa, doğru video ID’sini ver, hemen düzeltirim.
+  { title:"Tengir Azun", id:"pGzG6FzjGgA" },
+
+  { title:"Andımız", id:"hG2L1QacdsM" }
 ];
 
-const select=document.getElementById("playlistSelect");
-const player=document.getElementById("ytPlayer");
-let currentIndex=0;
+const playlistSelect = document.getElementById("playlistSelect");
+const playBtn = document.getElementById("playBtn");
+const nextBtn = document.getElementById("nextBtn");
+const stopBtn = document.getElementById("stopBtn");
+const nowPlaying = document.getElementById("nowPlaying");
 
-TURK_PLAYLIST.forEach((item,i)=>{
+let currentIndex = 0;
+let ytPlayer = null;
+let userStartedOnce = false; // mobil autoplay için
+
+// dropdown doldur
+TURK_PLAYLIST.forEach((item, i)=>{
   const opt=document.createElement("option");
-  opt.value=i;
+  opt.value=String(i);
   opt.textContent=item.title;
-  select.appendChild(opt);
+  playlistSelect.appendChild(opt);
 });
 
+function setNow(){
+  nowPlaying.textContent = "Şimdi: " + TURK_PLAYLIST[currentIndex].title;
+}
+
+// YouTube API hazır olunca çağrılır
+window.onYouTubeIframeAPIReady = function(){
+  ytPlayer = new YT.Player("ytMount", {
+    height: "200",
+    width: "100%",
+    videoId: TURK_PLAYLIST[currentIndex].id,
+    playerVars: {
+      autoplay: 0,          // ilk başlatmayı kullanıcı yapsın
+      rel: 0,
+      playsinline: 1
+    },
+    events: {
+      onStateChange: onYTStateChange
+    }
+  });
+  setNow();
+};
+
+function onYTStateChange(e){
+  // ENDED = 0
+  if(e.data === YT.PlayerState.ENDED){
+    // şarkı bitti -> otomatik sonraki
+    playNext(true);
+  }
+}
+
 function playSelected(){
-  const index=parseInt(select.value);
-  currentIndex=index;
-  player.src=`https://www.youtube.com/embed/${TURK_PLAYLIST[index].id}?autoplay=1`;
+  if(!ytPlayer) return;
+  const idx = parseInt(playlistSelect.value,10);
+  if(!TURK_PLAYLIST[idx]) return;
+  currentIndex = idx;
+  setNow();
+  userStartedOnce = true;
+  ytPlayer.loadVideoById(TURK_PLAYLIST[currentIndex].id);
 }
-function nextSong(){
-  currentIndex=(currentIndex+1)%TURK_PLAYLIST.length;
-  select.value=currentIndex;
-  playSelected();
+
+function playNext(auto){
+  if(!ytPlayer) return;
+
+  // mobilde kullanıcı hiç başlatmadıysa otomatik geçişi denemeyelim
+  if(auto && !userStartedOnce) return;
+
+  currentIndex = (currentIndex + 1) % TURK_PLAYLIST.length;
+  playlistSelect.value = String(currentIndex);
+  setNow();
+  ytPlayer.loadVideoById(TURK_PLAYLIST[currentIndex].id);
 }
+
 function stopMusic(){
-  player.src="";
+  if(!ytPlayer) return;
+  ytPlayer.stopVideo();
+  nowPlaying.textContent = "Durduruldu.";
 }
 
-/* Ses efektleri */
-function playMoveSound(){
-  const ctx=new AudioContext();
-  const o=ctx.createOscillator();
-  o.frequency.value=300;
-  o.connect(ctx.destination);
-  o.start();
-  o.stop(ctx.currentTime+0.1);
-}
-function playCheckSound(){
-  const ctx=new AudioContext();
-  const o=ctx.createOscillator();
-  o.frequency.value=600;
-  o.connect(ctx.destination);
-  o.start();
-  o.stop(ctx.currentTime+0.2);
-}
-function playMateSound(){
-  const ctx=new AudioContext();
-  const o=ctx.createOscillator();
-  o.frequency.value=150;
-  o.connect(ctx.destination);
-  o.start();
-  o.stop(ctx.currentTime+0.5);
-}
+playBtn.addEventListener("click", playSelected);
+nextBtn.addEventListener("click", ()=>playNext(false));
+stopBtn.addEventListener("click", stopMusic);
 
+/* =========================
+   4) SES EFEKTLERİ
+========================= */
+function beep(freq, dur){
+  const AudioCtx = window.AudioContext || window.webkitAudioContext;
+  const ctx = new AudioCtx();
+  const o = ctx.createOscillator();
+  const g = ctx.createGain();
+  o.frequency.value = freq;
+  g.gain.value = 0.12;
+  o.connect(g); g.connect(ctx.destination);
+  o.start();
+  o.stop(ctx.currentTime + dur);
+}
+function playMoveSound(){ beep(280, 0.08); }
+function playCaptureSound(){ beep(200, 0.10); }
+function playCheckSound(){ beep(560, 0.12); }
+function playMateSound(){ beep(140, 0.40); }
 </script>
 
 </body>
-  </html>
+</html>

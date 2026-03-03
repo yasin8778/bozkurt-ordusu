@@ -3,12 +3,11 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1"/>
-  <title>Bozkurt Ordusu - Kurallı Satranç (Motorlu AI + Komutan + Analist)</title>
+  <title>Bozkurt Ordusu (Börüler) — Satranç</title>
   <style>
     :root{
       --bg:#0b1220;
       --panel:#111a2e;
-      --panel2:#0f1730;
       --text:#e6eefc;
       --muted:#a7b3cc;
       --accent:#4f8cff;
@@ -16,10 +15,9 @@
       --bad:#ff5c7a;
       --warn:#ffcc66;
 
-      --light:#f0d9b5;
-      --dark:#b58863;
+      --light:#f0d9b5;   /* klasik satranç */
+      --dark:#b58863;    /* klasik satranç */
       --hl:#57a6ff;
-      --hl2:#ffd166;
       --cap:#ff6b6b;
     }
     *{box-sizing:border-box}
@@ -30,39 +28,18 @@
       font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;
       -webkit-tap-highlight-color: transparent;
     }
-    .wrap{
-      max-width:980px;
-      margin:0 auto;
-      padding:14px;
-      display:grid;
-      grid-template-columns: 1fr;
-      gap:12px;
-    }
+    .wrap{max-width:980px;margin:0 auto;padding:14px;display:grid;gap:12px;}
     .top{
       background:linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
       border:1px solid rgba(255,255,255,.10);
       border-radius:18px;
       padding:14px;
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:12px;
+      display:flex;align-items:center;justify-content:space-between;gap:12px;
     }
-    .brand{
-      display:flex;
-      flex-direction:column;
-      gap:3px;
-      min-width: 200px;
-    }
-    .brand .t{font-size:22px;font-weight:800;letter-spacing:.2px}
-    .brand .s{color:var(--muted);font-size:12.5px}
-    .controls{
-      display:flex;
-      flex-wrap:wrap;
-      gap:10px;
-      justify-content:flex-end;
-      align-items:center;
-    }
+    .brand{display:flex;flex-direction:column;gap:3px;min-width:220px}
+    .brand .t{font-size:22px;font-weight:850;letter-spacing:.2px}
+    .brand .s{color:var(--muted);font-size:12.5px;line-height:1.35}
+    .controls{display:flex;flex-wrap:wrap;gap:10px;justify-content:flex-end;align-items:center}
     select, button{
       background:rgba(255,255,255,.06);
       color:var(--text);
@@ -75,37 +52,20 @@
     button.primary{
       background:linear-gradient(180deg, rgba(79,140,255,.95), rgba(79,140,255,.70));
       border-color: rgba(79,140,255,.35);
-      font-weight:700;
+      font-weight:750;
     }
     button:active{transform:translateY(1px)}
-    .grid{
-      display:grid;
-      grid-template-columns: 1fr;
-      gap:12px;
-    }
-    @media (min-width: 860px){
-      .grid{ grid-template-columns: 1.05fr .95fr; align-items:start; }
-    }
+    .grid{display:grid;grid-template-columns:1fr;gap:12px;}
+    @media(min-width:860px){ .grid{grid-template-columns: 1.05fr .95fr;} }
     .card{
       background:linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
       border:1px solid rgba(255,255,255,.10);
       border-radius:18px;
       padding:14px;
     }
-    .boardWrap{
-      display:flex;
-      flex-direction:column;
-      gap:10px;
-      align-items:center;
-    }
-    .hud{
-      width:100%;
-      display:flex;
-      gap:10px;
-      flex-wrap:wrap;
-      align-items:center;
-      justify-content:space-between;
-    }
+
+    /* HUD */
+    .hud{width:100%;display:flex;gap:10px;flex-wrap:wrap;align-items:center;justify-content:space-between}
     .pill{
       background:rgba(255,255,255,.05);
       border:1px solid rgba(255,255,255,.10);
@@ -113,83 +73,59 @@
       padding:8px 12px;
       font-size:13px;
       color:var(--muted);
-      display:flex;
-      gap:8px;
-      align-items:center;
+      display:flex;gap:8px;align-items:center;
     }
     .pill b{color:var(--text)}
-    .statusLine{
-      width:100%;
-      color:var(--muted);
-      font-size:13px;
-      line-height:1.4;
-      padding-top:2px;
-    }
+    .statusLine{width:100%;color:var(--muted);font-size:13px;line-height:1.4;padding-top:2px}
 
-    /* Board */
+    /* BOARD: kare garanti */
+    .boardWrap{display:flex;flex-direction:column;gap:10px;align-items:center}
     .board{
       width:min(92vw, 520px);
       aspect-ratio: 1 / 1;
       display:grid;
       grid-template-columns:repeat(8,1fr);
-      border-radius:18px;
+      grid-template-rows:repeat(8,1fr);
+      border-radius:10px;
       overflow:hidden;
-      box-shadow: 0 18px 45px rgba(0,0,0,.45);
-      border:1px solid rgba(255,255,255,.10);
+      box-shadow:0 18px 45px rgba(0,0,0,.45);
+      border:10px solid rgba(255,255,255,.06);
       user-select:none;
       touch-action: manipulation;
       background:#000;
     }
     .sq{
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      font-size: clamp(26px, 5vw, 44px);
+      width:100%; height:100%;
+      display:flex;align-items:center;justify-content:center;
+      font-size: clamp(28px, 7vw, 46px);
       position:relative;
       cursor:pointer;
     }
     .sq.light{background:var(--light)}
     .sq.dark{background:var(--dark)}
-    .sq.sel::after{
-      content:"";
-      position:absolute; inset:0;
-      outline:3px solid var(--hl);
-      outline-offset:-3px;
-      border-radius:0;
-    }
+    .sq.sel{outline:3px solid rgba(255,215,0,.9);outline-offset:-3px}
     .sq.move::before{
-      content:"";
-      position:absolute;
-      width:18%; height:18%;
-      border-radius:999px;
-      background: rgba(87,166,255,.75);
+      content:"";position:absolute;width:18%;height:18%;
+      border-radius:999px;background:rgba(87,166,255,.75);
     }
     .sq.cap::before{
-      content:"";
-      position:absolute;
-      width:70%; height:70%;
-      border-radius:999px;
-      border:4px solid rgba(255,92,122,.75);
-      background: transparent;
+      content:"";position:absolute;width:70%;height:70%;
+      border-radius:999px;border:4px solid rgba(255,92,122,.75);
+      background:transparent;
     }
-    .sq.check::after{
-      content:"";
-      position:absolute; inset:0;
-      outline:3px solid rgba(255,92,122,.95);
-      outline-offset:-3px;
-    }
-    .lastFrom::after, .lastTo::after{
-      content:"";
-      position:absolute; inset:0;
-      outline:3px solid rgba(255,209,102,.85);
-      outline-offset:-3px;
-    }
+    .sq.check{outline:3px solid rgba(255,92,122,.95);outline-offset:-3px}
+    .lastFrom, .lastTo{outline:3px solid rgba(255,209,102,.85);outline-offset:-3px}
 
-    .sideTitle{
-      font-weight:800;
-      font-size:16px;
-      margin:2px 0 10px;
+    /* Side panel */
+    .sideTitle{font-weight:850;font-size:16px;margin:2px 0 10px}
+    .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:10px 0 10px}
+    .tag{
+      font-size:12px;padding:6px 10px;border-radius:999px;
+      border:1px solid rgba(255,255,255,.12);
+      background:rgba(255,255,255,.05);
+      color:var(--muted);
     }
+    .tag b{color:var(--text)}
     .box{
       background:rgba(0,0,0,.22);
       border:1px solid rgba(255,255,255,.08);
@@ -197,22 +133,6 @@
       padding:12px;
       min-height:110px;
     }
-    .row{
-      display:flex; gap:8px; flex-wrap:wrap; align-items:center;
-      margin:10px 0 10px;
-    }
-    .tag{
-      font-size:12px;
-      padding:6px 10px;
-      border-radius:999px;
-      border:1px solid rgba(255,255,255,.12);
-      background:rgba(255,255,255,.05);
-      color:var(--muted);
-    }
-    .tag b{color:var(--text)}
-    .good{color:var(--good)}
-    .bad{color:var(--bad)}
-    .warn{color:var(--warn)}
     .moves{
       margin-top:10px;
       max-height:220px;
@@ -221,22 +141,119 @@
       font-size:12.5px;
       color:#d8e3ff;
     }
-    .moves div{padding:3px 0; border-bottom:1px dashed rgba(255,255,255,.08)}
-    .hint{
-      color:var(--muted);
-      font-size:12.5px;
-      line-height:1.45;
-      margin-top:10px;
+    .moves div{padding:3px 0;border-bottom:1px dashed rgba(255,255,255,.08)}
+    .hint{color:var(--muted);font-size:12.5px;line-height:1.45;margin-top:10px}
+    .good{color:var(--good)} .bad{color:var(--bad)} .warn{color:var(--warn)}
+
+    /* SPLASH (Orhun animasyonu) */
+    .splash{
+      position:fixed; inset:0;
+      background:radial-gradient(900px 600px at 40% 25%, rgba(79,140,255,.20) 0%, rgba(0,0,0,.88) 55%, rgba(0,0,0,.95) 100%);
+      display:flex; align-items:center; justify-content:center;
+      z-index:9999;
+      padding:18px;
     }
-    a{color:var(--accent)}
+    .splashCard{
+      width:min(680px, 100%);
+      border-radius:22px;
+      border:1px solid rgba(255,255,255,.10);
+      background:linear-gradient(180deg, rgba(255,255,255,.07), rgba(255,255,255,.03));
+      box-shadow:0 30px 80px rgba(0,0,0,.55);
+      padding:18px;
+      text-align:center;
+      overflow:hidden;
+      position:relative;
+    }
+    .splashTop{
+      display:flex; align-items:center; justify-content:center; gap:10px;
+      font-weight:900; letter-spacing:.3px;
+      font-size:22px;
+    }
+    .splashSub{margin-top:6px;color:var(--muted);font-size:13px;line-height:1.4}
+    .runes{
+      margin-top:14px;
+      font-size:34px;
+      letter-spacing:4px;
+      opacity:.92;
+      filter: drop-shadow(0 10px 25px rgba(79,140,255,.25));
+      animation: runeGlow 1.2s ease-in-out infinite alternate;
+    }
+    @keyframes runeGlow{ from{transform:translateY(0);opacity:.78} to{transform:translateY(-2px);opacity:1} }
+    .typeLine{
+      margin:14px auto 0;
+      width:min(560px, 100%);
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size:13px;
+      color:#d8e3ff;
+      white-space:nowrap;
+      overflow:hidden;
+      border-right: 2px solid rgba(255,255,255,.55);
+      animation: typing 2.2s steps(60,end) 1, caret .65s step-end infinite;
+    }
+    @keyframes typing{ from{width:0} to{width:100%} }
+    @keyframes caret{ 50%{border-color:transparent} }
+
+    .splashQuote{
+      margin-top:14px;
+      padding:12px 12px;
+      border-radius:16px;
+      border:1px solid rgba(255,255,255,.10);
+      background:rgba(0,0,0,.18);
+      color:rgba(230,238,252,.92);
+      line-height:1.45;
+      font-size:14px;
+    }
+    .splashBtnRow{
+      margin-top:14px;
+      display:flex; gap:10px; justify-content:center; flex-wrap:wrap;
+    }
+    .splashBtn{
+      cursor:pointer;
+      user-select:none;
+      padding:10px 14px;
+      border-radius:14px;
+      border:1px solid rgba(255,255,255,.14);
+      background:rgba(255,255,255,.06);
+      color:var(--text);
+      font-weight:850;
+    }
+    .splashBtn.primary{
+      background:linear-gradient(180deg, rgba(79,140,255,.95), rgba(79,140,255,.70));
+      border-color: rgba(79,140,255,.35);
+    }
+    .splashNote{margin-top:10px;color:var(--muted);font-size:12px}
+    .hide{display:none !important;}
   </style>
 </head>
 <body>
+
+  <!-- Splash / Intro -->
+  <div class="splash" id="splash">
+    <div class="splashCard">
+      <div class="splashTop">🇹🇷 Bozkurt Ordusu <span style="opacity:.7">(Börüler)</span></div>
+      <div class="splashSub">Töre ile oyna. Akıl ile kazan. (Offline motor)</div>
+
+      <!-- Not: Buradaki runeler “Orhun esintisi” olarak kullanılıyor -->
+      <div class="runes">𐰉𐰇𐰺𐰇  ·  𐰴𐰍𐰣  ·  𐰉𐰇𐰺𐰇</div>
+      <div class="typeLine">𐰉𐰇𐰺𐰇 (Börü) · 𐰴𐰍𐰣 (Kağan) · 𐰑𐰓𐰑𐰓 (Dede) — Savaş Başlıyor…</div>
+
+      <div class="splashQuote" id="kaganQuote">
+        <b>Kağan:</b> “Her Türk asker doğar. Görev değişir; töre değişmez.”
+      </div>
+
+      <div class="splashBtnRow">
+        <div class="splashBtn primary" id="startBtn">Başlat</div>
+        <div class="splashBtn" id="skipBtn">Geç</div>
+      </div>
+      <div class="splashNote">İpucu: Beyaz sen, Siyah AI. Rok yapmayı unutma.</div>
+    </div>
+  </div>
+
   <div class="wrap">
     <div class="top">
       <div class="brand">
-        <div class="t">Bozkurt Ordusu</div>
-        <div class="s">Kurallı satranç + motorlu AI (offline) + Koç (Komutan) + Analist</div>
+        <div class="t">🇹🇷 Bozkurt Ordusu <span style="opacity:.7">(Börüler)</span></div>
+        <div class="s">𐰉𐰇𐰺𐰇 – Börü · 𐰴𐰍𐰣 – Kağan · 𐰑𐰓𐰑𐰓 – Dede</div>
       </div>
       <div class="controls">
         <select id="aiLevel" title="AI seviyesi">
@@ -266,79 +283,49 @@
       </div>
 
       <div class="card">
-        <div class="sideTitle">Komutan & Analist</div>
+        <div class="sideTitle">Kağan & Dede</div>
+
         <div class="row">
           <span class="tag">Motor: <b>Offline MiniMax</b></span>
           <span class="tag">Açılış: <b id="openingLbl">-</b></span>
           <span class="tag">Son Hamle: <b id="lastMoveLbl">-</b></span>
         </div>
 
-        <div class="box" id="coachBox">
-          <div class="tag"><b>Komutan (Koç)</b></div>
-          <div style="margin-top:8px;color:var(--muted)" id="coachText">Hazır. İlk hamleni bekliyorum.</div>
+        <div class="box">
+          <div class="tag"><b>Kağan (Koç)</b></div>
+          <div style="margin-top:8px;color:var(--muted)" id="kaganText">Hazır. İlk hamleni bekliyorum.</div>
         </div>
 
-        <div class="box" id="analystBox" style="margin-top:12px">
-          <div class="tag"><b>Analist</b></div>
-          <div style="margin-top:8px;color:var(--muted)" id="analystText">Hamle bekleniyor.</div>
+        <div class="box" style="margin-top:12px">
+          <div class="tag"><b>Dede (Analist)</b></div>
+          <div style="margin-top:8px;color:var(--muted)" id="dedeText">Hamle bekleniyor.</div>
         </div>
 
         <div class="moves" id="movesBox" aria-label="Hamle listesi"></div>
         <div class="hint">
-          Not: Bu sürüm tamamen tek dosya çalışır. AI seviyesi “Zor”da telefonlarda biraz yavaşlayabilir (normal).
+          Not: “AI: Zor” seviyesi bazı telefonlarda yavaşlayabilir (normal). İstersen hızlandırırım.
         </div>
       </div>
     </div>
   </div>
 
 <script>
-/* =========================
-   CHESS CORE (single-file)
-   - Legal move generation with:
-     check legality, castling, en-passant, promotion
-   - SAN notation
-   - Simple eval + minimax AI
-   ========================= */
-
 (() => {
-  // Pieces: uppercase = White, lowercase = Black
-  // Board: 0..63, a1=56? We'll use (r,c) with r=0 top (8th rank), c=0 file a.
+  // =============== helpers ===============
   const FILES = "abcdefgh";
   const RANKS = "87654321";
-
-  const pieceValues = {
-    p:100, n:320, b:330, r:500, q:900, k:20000
-  };
-
   function isUpper(ch){ return ch >= 'A' && ch <= 'Z'; }
-  function isLower(ch){ return ch >= 'a' && ch <= 'z'; }
-  function colorOf(piece){
-    if(!piece) return null;
-    return isUpper(piece) ? 'w' : 'b';
-  }
-  function typeOf(piece){
-    if(!piece) return null;
-    return piece.toLowerCase();
-  }
+  function colorOf(piece){ if(!piece) return null; return isUpper(piece) ? 'w' : 'b'; }
+  function typeOf(piece){ return piece ? piece.toLowerCase() : null; }
   function inBounds(r,c){ return r>=0 && r<8 && c>=0 && c<8; }
   function sqName(r,c){ return FILES[c] + RANKS[r]; }
-  function parseSq(name){
-    const c = FILES.indexOf(name[0]);
-    const r = RANKS.indexOf(name[1]);
-    return {r,c};
-  }
+  function parseSq(name){ return { c: FILES.indexOf(name[0]), r: RANKS.indexOf(name[1]) }; }
 
-  // Initial position
   const START_FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
+  const pieceValues = { p:100, n:320, b:330, r:500, q:900, k:20000 };
 
   class Chess {
-    constructor(fen=START_FEN){
-      this.loadFEN(fen);
-      this.history = []; // for undo
-      this.sanHistory = [];
-      this.openingMoves = []; // store uci-like for opening detection
-    }
-
+    constructor(fen=START_FEN){ this.loadFEN(fen); this.history=[]; this.sanHistory=[]; this.openingMoves=[]; }
     clone(){
       const g = new Chess(this.fen());
       g.history = JSON.parse(JSON.stringify(this.history));
@@ -346,86 +333,55 @@
       g.openingMoves = [...this.openingMoves];
       return g;
     }
-
     loadFEN(fen){
       const parts = fen.split(/\s+/);
-      const boardPart = parts[0];
-      const turn = parts[1];
-      const castling = parts[2];
-      const ep = parts[3];
-      const halfmove = parseInt(parts[4]||"0",10);
-      const fullmove = parseInt(parts[5]||"1",10);
-
+      const rows = parts[0].split('/');
       this.board = Array.from({length:8},()=>Array(8).fill(null));
-      const rows = boardPart.split('/');
       for(let r=0;r<8;r++){
         let c=0;
         for(const ch of rows[r]){
-          if(ch>='1' && ch<='8'){
-            c += parseInt(ch,10);
-          } else {
-            this.board[r][c]=ch;
-            c++;
-          }
+          if(ch>='1' && ch<='8') c += parseInt(ch,10);
+          else this.board[r][c++] = ch;
         }
       }
-      this.turn = turn; // 'w' or 'b'
-      this.castling = {
-        K: castling.includes('K'),
-        Q: castling.includes('Q'),
-        k: castling.includes('k'),
-        q: castling.includes('q'),
-      };
-      this.ep = ep === '-' ? null : ep;
-      this.halfmove = halfmove;
-      this.fullmove = fullmove;
+      this.turn = parts[1];
+      const castling = parts[2] || "-";
+      this.castling = { K:castling.includes("K"), Q:castling.includes("Q"), k:castling.includes("k"), q:castling.includes("q") };
+      this.ep = (parts[3] && parts[3] !== "-") ? parts[3] : null;
+      this.halfmove = parseInt(parts[4]||"0",10);
+      this.fullmove = parseInt(parts[5]||"1",10);
     }
-
     fen(){
       let boardPart="";
       for(let r=0;r<8;r++){
         let empty=0;
         for(let c=0;c<8;c++){
           const p=this.board[r][c];
-          if(!p){ empty++; }
-          else{
-            if(empty){ boardPart += empty; empty=0; }
-            boardPart += p;
-          }
+          if(!p) empty++;
+          else { if(empty){ boardPart+=empty; empty=0; } boardPart+=p; }
         }
-        if(empty) boardPart += empty;
-        if(r!==7) boardPart += "/";
+        if(empty) boardPart+=empty;
+        if(r!==7) boardPart+="/";
       }
       const cast = ["K","Q","k","q"].filter(k=>this.castling[k]).join("") || "-";
-      const ep = this.ep ? this.ep : "-";
-      return `${boardPart} ${this.turn} ${cast} ${ep} ${this.halfmove} ${this.fullmove}`;
+      return `${boardPart} ${this.turn} ${cast} ${this.ep?this.ep:"-"} ${this.halfmove} ${this.fullmove}`;
     }
-
     pieceAt(r,c){ return this.board[r][c]; }
-    setPiece(r,c,p){ this.board[r][c]=p; }
-
     kingPos(color){
-      const target = color==='w'?'K':'k';
-      for(let r=0;r<8;r++) for(let c=0;c<8;c++){
-        if(this.board[r][c]===target) return {r,c};
-      }
+      const target = color==='w' ? 'K' : 'k';
+      for(let r=0;r<8;r++) for(let c=0;c<8;c++) if(this.board[r][c]===target) return {r,c};
       return null;
     }
-
     isSquareAttacked(r,c,byColor){
-      // check attacks by pawns, knights, bishops/rooks/queens, king
-      const dir = byColor==='w' ? -1 : 1; // white pawns attack up (toward smaller r)
-      // pawns
+      const dir = byColor==='w' ? -1 : 1;
       for(const dc of [-1,1]){
-        const rr = r + dir;
-        const cc = c + dc;
+        const rr=r+dir, cc=c+dc;
         if(inBounds(rr,cc)){
-          const p = this.board[rr][cc];
+          const p=this.board[rr][cc];
           if(p && colorOf(p)===byColor && typeOf(p)==='p') return true;
         }
       }
-      // knights
-      const N = [[-2,-1],[-2,1],[-1,-2],[-1,2],[1,-2],[1,2],[2,-1],[2,1]];
+      const N=[[-2,-1],[-2,1],[-1,-2],[-1,2],[1,-2],[1,2],[2,-1],[2,1]];
       for(const [dr,dc] of N){
         const rr=r+dr, cc=c+dc;
         if(inBounds(rr,cc)){
@@ -433,41 +389,26 @@
           if(p && colorOf(p)===byColor && typeOf(p)==='n') return true;
         }
       }
-      // bishops/queens (diagonals)
-      const diag = [[-1,-1],[-1,1],[1,-1],[1,1]];
+      const diag=[[-1,-1],[-1,1],[1,-1],[1,1]];
       for(const [dr,dc] of diag){
         let rr=r+dr, cc=c+dc;
         while(inBounds(rr,cc)){
           const p=this.board[rr][cc];
-          if(p){
-            if(colorOf(p)===byColor){
-              const t=typeOf(p);
-              if(t==='b' || t==='q') return true;
-            }
-            break;
-          }
+          if(p){ if(colorOf(p)===byColor){ const t=typeOf(p); if(t==='b'||t==='q') return true; } break; }
           rr+=dr; cc+=dc;
         }
       }
-      // rooks/queens (lines)
-      const line = [[-1,0],[1,0],[0,-1],[0,1]];
+      const line=[[-1,0],[1,0],[0,-1],[0,1]];
       for(const [dr,dc] of line){
         let rr=r+dr, cc=c+dc;
         while(inBounds(rr,cc)){
           const p=this.board[rr][cc];
-          if(p){
-            if(colorOf(p)===byColor){
-              const t=typeOf(p);
-              if(t==='r' || t==='q') return true;
-            }
-            break;
-          }
+          if(p){ if(colorOf(p)===byColor){ const t=typeOf(p); if(t==='r'||t==='q') return true; } break; }
           rr+=dr; cc+=dc;
         }
       }
-      // king
       for(let dr=-1;dr<=1;dr++) for(let dc=-1;dc<=1;dc++){
-        if(dr===0 && dc===0) continue;
+        if(dr===0&&dc===0) continue;
         const rr=r+dr, cc=c+dc;
         if(inBounds(rr,cc)){
           const p=this.board[rr][cc];
@@ -476,180 +417,99 @@
       }
       return false;
     }
-
     inCheck(color){
       const k=this.kingPos(color);
       if(!k) return false;
-      const opp = color==='w'?'b':'w';
+      const opp=color==='w'?'b':'w';
       return this.isSquareAttacked(k.r,k.c,opp);
     }
 
     generatePseudoMoves(){
       const moves=[];
-      const us=this.turn;
-      const opp = us==='w'?'b':'w';
+      const us=this.turn, opp=us==='w'?'b':'w';
+      const push=(from,to,opts={})=>moves.push({from,to,piece:opts.piece,captured:opts.captured||null,promotion:opts.promotion||null,enPassant:!!opts.enPassant,castling:opts.castling||null,doublePawn:!!opts.doublePawn});
+      for(let r=0;r<8;r++) for(let c=0;c<8;c++){
+        const p=this.board[r][c]; if(!p||colorOf(p)!==us) continue;
+        const t=typeOf(p), from={r,c};
 
-      const pushMove = (from,to,opts={}) => {
-        moves.push({
-          from, to,
-          piece: opts.piece,
-          captured: opts.captured||null,
-          promotion: opts.promotion||null,
-          enPassant: !!opts.enPassant,
-          castling: opts.castling||null, // 'K','Q','k','q'
-          doublePawn: !!opts.doublePawn
-        });
-      };
-
-      for(let r=0;r<8;r++){
-        for(let c=0;c<8;c++){
-          const p=this.board[r][c];
-          if(!p) continue;
-          if(colorOf(p)!==us) continue;
-          const t=typeOf(p);
-          const from={r,c};
-
-          if(t==='p'){
-            const dir = us==='w' ? -1 : 1;
-            const startRank = us==='w' ? 6 : 1;
-            const promoRank = us==='w' ? 0 : 7;
-
-            // forward 1
-            const r1=r+dir;
-            if(inBounds(r1,c) && !this.board[r1][c]){
-              if(r1===promoRank){
-                for(const pr of ['q','r','b','n']){
-                  pushMove(from,{r:r1,c},{piece:p,promotion: us==='w'?pr.toUpperCase():pr});
-                }
-              }else{
-                pushMove(from,{r:r1,c},{piece:p});
-              }
-              // forward 2
-              const r2=r+2*dir;
-              if(r===startRank && inBounds(r2,c) && !this.board[r2][c]){
-                pushMove(from,{r:r2,c},{piece:p,doublePawn:true});
-              }
-            }
-
-            // captures
-            for(const dc of [-1,1]){
-              const cc=c+dc;
-              const rr=r+dir;
-              if(!inBounds(rr,cc)) continue;
-              const cap=this.board[rr][cc];
-              if(cap && colorOf(cap)===opp){
-                if(rr===promoRank){
-                  for(const pr of ['q','r','b','n']){
-                    pushMove(from,{r:rr,c:cc},{piece:p,captured:cap,promotion: us==='w'?pr.toUpperCase():pr});
-                  }
-                }else{
-                  pushMove(from,{r:rr,c:cc},{piece:p,captured:cap});
-                }
-              }
-            }
-
-            // en passant
-            if(this.ep){
-              const {r:er,c:ec}=parseSq(this.ep);
-              // ep square must be exactly one diag ahead
-              if(er===r+dir && Math.abs(ec-c)===1){
-                // captured pawn is behind ep square
-                const capR = er - dir;
-                const cap = this.board[capR][ec];
-                if(cap && typeOf(cap)==='p' && colorOf(cap)===opp){
-                  pushMove(from,{r:er,c:ec},{piece:p,captured:cap,enPassant:true});
-                }
-              }
+        if(t==='p'){
+          const dir=us==='w'?-1:1;
+          const startRank=us==='w'?6:1;
+          const promoRank=us==='w'?0:7;
+          const r1=r+dir;
+          if(inBounds(r1,c)&&!this.board[r1][c]){
+            if(r1===promoRank){
+              for(const pr of ['q','r','b','n']) push(from,{r:r1,c},{piece:p,promotion:us==='w'?pr.toUpperCase():pr});
+            } else push(from,{r:r1,c},{piece:p});
+            const r2=r+2*dir;
+            if(r===startRank && inBounds(r2,c) && !this.board[r2][c]) push(from,{r:r2,c},{piece:p,doublePawn:true});
+          }
+          for(const dc of [-1,1]){
+            const rr=r+dir, cc=c+dc;
+            if(!inBounds(rr,cc)) continue;
+            const cap=this.board[rr][cc];
+            if(cap && colorOf(cap)===opp){
+              if(rr===promoRank){
+                for(const pr of ['q','r','b','n']) push(from,{r:rr,c:cc},{piece:p,captured:cap,promotion:us==='w'?pr.toUpperCase():pr});
+              } else push(from,{r:rr,c:cc},{piece:p,captured:cap});
             }
           }
+          if(this.ep){
+            const {r:er,c:ec}=parseSq(this.ep);
+            if(er===r+dir && Math.abs(ec-c)===1){
+              const capR = er - dir;
+              const cap = this.board[capR][ec];
+              if(cap && typeOf(cap)==='p' && colorOf(cap)===opp) push(from,{r:er,c:ec},{piece:p,captured:cap,enPassant:true});
+            }
+          }
+        }
 
-          if(t==='n'){
-            const steps=[[-2,-1],[-2,1],[-1,-2],[-1,2],[1,-2],[1,2],[2,-1],[2,1]];
-            for(const [dr,dc] of steps){
-              const rr=r+dr, cc=c+dc;
-              if(!inBounds(rr,cc)) continue;
+        if(t==='n'){
+          const steps=[[-2,-1],[-2,1],[-1,-2],[-1,2],[1,-2],[1,2],[2,-1],[2,1]];
+          for(const [dr,dc] of steps){
+            const rr=r+dr, cc=c+dc; if(!inBounds(rr,cc)) continue;
+            const target=this.board[rr][cc];
+            if(!target) push(from,{r:rr,c:cc},{piece:p});
+            else if(colorOf(target)===opp) push(from,{r:rr,c:cc},{piece:p,captured:target});
+          }
+        }
+
+        if(t==='b'||t==='r'||t==='q'){
+          const dirs=[];
+          if(t==='b'||t==='q') dirs.push([-1,-1],[-1,1],[1,-1],[1,1]);
+          if(t==='r'||t==='q') dirs.push([-1,0],[1,0],[0,-1],[0,1]);
+          for(const [dr,dc] of dirs){
+            let rr=r+dr, cc=c+dc;
+            while(inBounds(rr,cc)){
               const target=this.board[rr][cc];
-              if(!target) pushMove(from,{r:rr,c:cc},{piece:p});
-              else if(colorOf(target)===opp) pushMove(from,{r:rr,c:cc},{piece:p,captured:target});
+              if(!target) push(from,{r:rr,c:cc},{piece:p});
+              else { if(colorOf(target)===opp) push(from,{r:rr,c:cc},{piece:p,captured:target}); break; }
+              rr+=dr; cc+=dc;
             }
           }
+        }
 
-          if(t==='b' || t==='r' || t==='q'){
-            const dirs=[];
-            if(t==='b' || t==='q') dirs.push([-1,-1],[-1,1],[1,-1],[1,1]);
-            if(t==='r' || t==='q') dirs.push([-1,0],[1,0],[0,-1],[0,1]);
-            for(const [dr,dc] of dirs){
-              let rr=r+dr, cc=c+dc;
-              while(inBounds(rr,cc)){
-                const target=this.board[rr][cc];
-                if(!target){
-                  pushMove(from,{r:rr,c:cc},{piece:p});
-                }else{
-                  if(colorOf(target)===opp) pushMove(from,{r:rr,c:cc},{piece:p,captured:target});
-                  break;
-                }
-                rr+=dr; cc+=dc;
-              }
-            }
+        if(t==='k'){
+          for(let dr=-1;dr<=1;dr++) for(let dc=-1;dc<=1;dc++){
+            if(dr===0&&dc===0) continue;
+            const rr=r+dr, cc=c+dc; if(!inBounds(rr,cc)) continue;
+            const target=this.board[rr][cc];
+            if(!target) push(from,{r:rr,c:cc},{piece:p});
+            else if(colorOf(target)===opp) push(from,{r:rr,c:cc},{piece:p,captured:target});
           }
-
-          if(t==='k'){
-            for(let dr=-1;dr<=1;dr++) for(let dc=-1;dc<=1;dc++){
-              if(dr===0 && dc===0) continue;
-              const rr=r+dr, cc=c+dc;
-              if(!inBounds(rr,cc)) continue;
-              const target=this.board[rr][cc];
-              if(!target) pushMove(from,{r:rr,c:cc},{piece:p});
-              else if(colorOf(target)===opp) pushMove(from,{r:rr,c:cc},{piece:p,captured:target});
+          const inChk=this.inCheck(us);
+          if(!inChk){
+            if(us==='w' && r===7 && c===4){
+              if(this.castling.K && !this.board[7][5] && !this.board[7][6] && this.board[7][7]==='R' &&
+                 !this.isSquareAttacked(7,5,'b') && !this.isSquareAttacked(7,6,'b')) push(from,{r:7,c:6},{piece:p,castling:'K'});
+              if(this.castling.Q && !this.board[7][3] && !this.board[7][2] && !this.board[7][1] && this.board[7][0]==='R' &&
+                 !this.isSquareAttacked(7,3,'b') && !this.isSquareAttacked(7,2,'b')) push(from,{r:7,c:2},{piece:p,castling:'Q'});
             }
-
-            // castling
-            // cannot castle out of check, through check, or into check, and squares between must be empty
-            const inChk = this.inCheck(us);
-            if(!inChk){
-              if(us==='w'){
-                // King at e1 -> r=7,c=4
-                if(r===7 && c===4){
-                  // K side: squares f1 g1 empty, rook h1 present, not attacked f1 g1
-                  if(this.castling.K &&
-                     !this.board[7][5] && !this.board[7][6] &&
-                     this.board[7][7]==='R' &&
-                     !this.isSquareAttacked(7,5,'b') &&
-                     !this.isSquareAttacked(7,6,'b')
-                  ){
-                    pushMove(from,{r:7,c:6},{piece:p,castling:'K'});
-                  }
-                  // Q side: squares d1 c1 b1 empty, rook a1 present, not attacked d1 c1
-                  if(this.castling.Q &&
-                     !this.board[7][3] && !this.board[7][2] && !this.board[7][1] &&
-                     this.board[7][0]==='R' &&
-                     !this.isSquareAttacked(7,3,'b') &&
-                     !this.isSquareAttacked(7,2,'b')
-                  ){
-                    pushMove(from,{r:7,c:2},{piece:p,castling:'Q'});
-                  }
-                }
-              } else {
-                // black King at e8 -> r=0,c=4
-                if(r===0 && c===4){
-                  if(this.castling.k &&
-                     !this.board[0][5] && !this.board[0][6] &&
-                     this.board[0][7]==='r' &&
-                     !this.isSquareAttacked(0,5,'w') &&
-                     !this.isSquareAttacked(0,6,'w')
-                  ){
-                    pushMove(from,{r:0,c:6},{piece:p,castling:'k'});
-                  }
-                  if(this.castling.q &&
-                     !this.board[0][3] && !this.board[0][2] && !this.board[0][1] &&
-                     this.board[0][0]==='r' &&
-                     !this.isSquareAttacked(0,3,'w') &&
-                     !this.isSquareAttacked(0,2,'w')
-                  ){
-                    pushMove(from,{r:0,c:2},{piece:p,castling:'q'});
-                  }
-                }
-              }
+            if(us==='b' && r===0 && c===4){
+              if(this.castling.k && !this.board[0][5] && !this.board[0][6] && this.board[0][7]==='r' &&
+                 !this.isSquareAttacked(0,5,'w') && !this.isSquareAttacked(0,6,'w')) push(from,{r:0,c:6},{piece:p,castling:'k'});
+              if(this.castling.q && !this.board[0][3] && !this.board[0][2] && !this.board[0][1] && this.board[0][0]==='r' &&
+                 !this.isSquareAttacked(0,3,'w') && !this.isSquareAttacked(0,2,'w')) push(from,{r:0,c:2},{piece:p,castling:'q'});
             }
           }
         }
@@ -658,109 +518,56 @@
     }
 
     makeMove(move){
-      // Save for undo
-      const snapshot = {
-        fen: this.fen(),
-        sanLen: this.sanHistory.length,
-        openLen: this.openingMoves.length
-      };
-      this.history.push(snapshot);
+      this.history.push({ fen:this.fen(), sanLen:this.sanHistory.length, openLen:this.openingMoves.length });
+      const us=this.turn, opp=us==='w'?'b':'w';
+      const piece=this.board[move.from.r][move.from.c];
 
-      const us=this.turn;
-      const opp = us==='w'?'b':'w';
-      const {from,to} = move;
-      const piece = this.board[from.r][from.c];
       const captured = move.enPassant ? (() => {
         const dir = us==='w' ? -1 : 1;
-        return this.board[to.r - dir][to.c];
-      })() : this.board[to.r][to.c];
+        return this.board[move.to.r - dir][move.to.c];
+      })() : this.board[move.to.r][move.to.c];
 
-      // halfmove clock
-      if(typeOf(piece)==='p' || captured) this.halfmove=0;
-      else this.halfmove++;
+      if(typeOf(piece)==='p' || captured) this.halfmove=0; else this.halfmove++;
+      this.ep=null;
+      this.board[move.from.r][move.from.c]=null;
 
-      // clear EP by default
-      this.ep = null;
-
-      // move piece
-      this.board[from.r][from.c]=null;
-
-      // castling rook move
       if(move.castling){
-        if(move.castling==='K'){ // white king side
-          this.board[7][6]='K';
-          this.board[7][5]='R';
-          this.board[7][7]=null;
-        } else if(move.castling==='Q'){
-          this.board[7][2]='K';
-          this.board[7][3]='R';
-          this.board[7][0]=null;
-        } else if(move.castling==='k'){
-          this.board[0][6]='k';
-          this.board[0][5]='r';
-          this.board[0][7]=null;
-        } else if(move.castling==='q'){
-          this.board[0][2]='k';
-          this.board[0][3]='r';
-          this.board[0][0]=null;
-        }
+        if(move.castling==='K'){ this.board[7][6]='K'; this.board[7][5]='R'; this.board[7][7]=null; }
+        if(move.castling==='Q'){ this.board[7][2]='K'; this.board[7][3]='R'; this.board[7][0]=null; }
+        if(move.castling==='k'){ this.board[0][6]='k'; this.board[0][5]='r'; this.board[0][7]=null; }
+        if(move.castling==='q'){ this.board[0][2]='k'; this.board[0][3]='r'; this.board[0][0]=null; }
       } else {
-        // en passant capture removal
         if(move.enPassant){
           const dir = us==='w' ? -1 : 1;
-          this.board[to.r - dir][to.c]=null;
+          this.board[move.to.r - dir][move.to.c]=null;
         }
-
-        // promotion
-        if(move.promotion){
-          this.board[to.r][to.c]=move.promotion;
-        } else {
-          this.board[to.r][to.c]=piece;
-        }
+        this.board[move.to.r][move.to.c] = move.promotion ? move.promotion : piece;
       }
 
-      // set EP target square on double pawn push
       if(move.doublePawn){
         const dir = us==='w' ? -1 : 1;
-        const epR = to.r - dir;
-        this.ep = sqName(epR, to.c);
+        const epR = move.to.r - dir;
+        this.ep = sqName(epR, move.to.c);
       }
 
-      // update castling rights
-      // if king moved
       if(piece==='K'){ this.castling.K=false; this.castling.Q=false; }
       if(piece==='k'){ this.castling.k=false; this.castling.q=false; }
-      // if rook moved from its corner
-      if(piece==='R' && from.r===7 && from.c===0) this.castling.Q=false;
-      if(piece==='R' && from.r===7 && from.c===7) this.castling.K=false;
-      if(piece==='r' && from.r===0 && from.c===0) this.castling.q=false;
-      if(piece==='r' && from.r===0 && from.c===7) this.castling.k=false;
-      // if rook captured on its corner
-      if(captured==='R' && to.r===7 && to.c===0) this.castling.Q=false;
-      if(captured==='R' && to.r===7 && to.c===7) this.castling.K=false;
-      if(captured==='r' && to.r===0 && to.c===0) this.castling.q=false;
-      if(captured==='r' && to.r===0 && to.c===7) this.castling.k=false;
+      if(piece==='R' && move.from.r===7 && move.from.c===0) this.castling.Q=false;
+      if(piece==='R' && move.from.r===7 && move.from.c===7) this.castling.K=false;
+      if(piece==='r' && move.from.r===0 && move.from.c===0) this.castling.q=false;
+      if(piece==='r' && move.from.r===0 && move.from.c===7) this.castling.k=false;
+      if(captured==='R' && move.to.r===7 && move.to.c===0) this.castling.Q=false;
+      if(captured==='R' && move.to.r===7 && move.to.c===7) this.castling.K=false;
+      if(captured==='r' && move.to.r===0 && move.to.c===0) this.castling.q=false;
+      if(captured==='r' && move.to.r===0 && move.to.c===7) this.castling.k=false;
 
-      // fullmove increment on black move
       if(us==='b') this.fullmove++;
-
-      // switch turn
       this.turn = opp;
 
-      // record opening move as UCI for detection
-      const uci = `${sqName(from.r,from.c)}${sqName(to.r,to.c)}${move.promotion?move.promotion.toLowerCase():''}`;
+      const uci = `${sqName(move.from.r,move.from.c)}${sqName(move.to.r,move.to.c)}${move.promotion?String(move.promotion).toLowerCase():''}`;
       this.openingMoves.push(uci);
 
       return {piece, captured};
-    }
-
-    undo(){
-      const snap=this.history.pop();
-      if(!snap) return false;
-      this.loadFEN(snap.fen);
-      this.sanHistory.length = snap.sanLen;
-      this.openingMoves.length = snap.openLen;
-      return true;
     }
 
     legalMoves(){
@@ -769,7 +576,6 @@
       for(const m of pseudo){
         const g=this.clone();
         g.makeMove(m);
-        // after move, turn switched, so check the mover king safety:
         const mover = g.turn==='w'?'b':'w';
         if(!g.inCheck(mover)) leg.push(m);
       }
@@ -782,45 +588,32 @@
         if(this.inCheck(this.turn)) return {over:true, result:"mat"};
         return {over:true, result:"pat"};
       }
-      // 50-move rule
       if(this.halfmove>=100) return {over:true, result:"50"};
       return {over:false, result:null};
     }
 
-    // SAN generation (simple but solid)
     sanFor(move){
-      const us = this.turn;
-      // SAN is for side to move BEFORE making the move, so generate with current position.
-      const piece = this.board[move.from.r][move.from.c];
-      const t = typeOf(piece);
-      const opp = us==='w'?'b':'w';
+      const us=this.turn;
+      const piece=this.board[move.from.r][move.from.c];
+      const t=typeOf(piece);
 
-      // Castling
       if(move.castling){
         return (move.castling==='K' || move.castling==='k') ? "O-O" : "O-O-O";
       }
 
-      // Determine capture
-      const isCap = !!move.captured || (this.ep && move.enPassant);
+      const isCap = !!move.captured || move.enPassant;
       const toSq = sqName(move.to.r, move.to.c);
+      let san="";
 
-      // piece letter
-      let san = "";
       if(t==='p'){
-        if(isCap){
-          san += FILES[move.from.c] + "x" + toSq;
-        } else {
-          san += toSq;
-        }
-        if(move.promotion){
-          san += "=" + move.promotion.toUpperCase();
-        }
+        if(isCap) san += FILES[move.from.c] + "x" + toSq;
+        else san += toSq;
+        if(move.promotion) san += "=" + String(move.promotion).toUpperCase();
       } else {
         const letter = ({n:"N",b:"B",r:"R",q:"Q",k:"K"})[t];
         san += letter;
 
-        // disambiguation if needed
-        const leg = this.legalMoves(); // all legal moves from current position
+        const leg=this.legalMoves();
         const same = leg.filter(m=>{
           if(m===move) return false;
           const p2=this.board[m.from.r][m.from.c];
@@ -831,236 +624,176 @@
           const needRank = same.some(m=>m.from.r!==move.from.r);
           if(needFile) san += FILES[move.from.c];
           if(needRank) san += RANKS[move.from.r];
-          if(!needFile && !needRank) san += FILES[move.from.c]; // safe fallback
+          if(!needFile && !needRank) san += FILES[move.from.c];
         }
-
         if(isCap) san += "x";
         san += toSq;
       }
 
-      // check / mate markers after move
       const g=this.clone();
-      const info=g.makeMove(move);
-      // now it's opponent's turn in g
+      g.makeMove(move);
       const over=g.isGameOver();
       if(over.over && over.result==="mat") san += "#";
       else if(g.inCheck(g.turn)) san += "+";
-
       return san;
     }
 
-    // Simple evaluation (material + piece-square + mobility-ish)
     evaluate(){
       let score=0;
-      for(let r=0;r<8;r++){
-        for(let c=0;c<8;c++){
-          const p=this.board[r][c];
-          if(!p) continue;
-          const col=colorOf(p);
-          const t=typeOf(p);
-          let v=pieceValues[t];
-          // tiny piece-square (center bonus)
-          const center = 3.5 - Math.abs(3.5-c) + 3.5 - Math.abs(3.5-r); // 0..7
-          v += (t==='p'? (center*1.2) : (center*1.8));
-          score += (col==='w'? v : -v);
-        }
+      for(let r=0;r<8;r++) for(let c=0;c<8;c++){
+        const p=this.board[r][c]; if(!p) continue;
+        const col=colorOf(p);
+        const t=typeOf(p);
+        let v=pieceValues[t];
+        const center = (3.5 - Math.abs(3.5-c) + 3.5 - Math.abs(3.5-r)); // 0..7
+        v += (t==='p' ? center*1.2 : center*1.8);
+        score += (col==='w'? v : -v);
       }
-      // prefer side to move slightly
       score += (this.turn==='w'? 6 : -6);
-
-      // scale to pawn units
       return score/100.0;
     }
   }
 
-  /* =========================
-     OPENING DETECTOR (tiny)
-     Works by UCI prefix
-     ========================= */
+  // OPENING tiny detector
   const OPENINGS = [
-    {name:"Ruy Lopez (İspanyol Açılışı)", line:["e2e4","e7e5","g1f3","b8c6","f1b5"]},
-    {name:"İtalyan (Giuoco Piano)", line:["e2e4","e7e5","g1f3","b8c6","f1c4"]},
+    {name:"Ruy Lopez (İspanyol)", line:["e2e4","e7e5","g1f3","b8c6","f1b5"]},
+    {name:"İtalyan", line:["e2e4","e7e5","g1f3","b8c6","f1c4"]},
     {name:"Sicilya Savunması", line:["e2e4","c7c5"]},
     {name:"Fransız Savunması", line:["e2e4","e7e6","d2d4","d7d5"]},
-    {name:"Caro-Kann Savunması", line:["e2e4","c7c6","d2d4","d7d5"]},
-    {name:"Pirc Savunması", line:["e2e4","d7d6","d2d4","g8f6"]},
-    {name:"Kraliçe Gambiti", line:["d2d4","d7d5","c2c4"]},
-    {name:"Slav Savunması", line:["d2d4","d7d5","c2c4","c7c6"]},
-    {name:"Hint Kral Savunması", line:["d2d4","g8f6","c2c4","g7g6"]},
+    {name:"Caro-Kann", line:["e2e4","c7c6","d2d4","d7d5"]},
+    {name:"Vezir Gambiti", line:["d2d4","d7d5","c2c4"]},
     {name:"İngiliz Açılışı", line:["c2c4"]},
   ];
   function detectOpening(uciMoves){
     for(const o of OPENINGS){
       let ok=true;
-      for(let i=0;i<o.line.length;i++){
-        if(uciMoves[i]!==o.line[i]){ ok=false; break; }
-      }
+      for(let i=0;i<o.line.length;i++){ if(uciMoves[i]!==o.line[i]){ ok=false; break; } }
       if(ok) return o.name;
     }
     return "-";
   }
 
-  /* =========================
-     AI (minimax + alpha-beta)
-     Difficulty sets depth
-     ========================= */
+  // AI
   function chooseDepth(level){
-    // Phone safe values
     if(level<=1) return 1;
     if(level===2) return 2;
     if(level===3) return 3;
-    return 4; // can be heavier
+    return 4;
   }
-
   function orderMoves(moves){
-    // simple ordering: captures/promotions first
     return [...moves].sort((a,b)=>{
       const va = (a.captured?10:0) + (a.promotion?9:0) + (a.castling?2:0);
       const vb = (b.captured?10:0) + (b.promotion?9:0) + (b.castling?2:0);
       return vb-va;
     });
   }
-
   function minimax(game, depth, alpha, beta){
-    const over = game.isGameOver();
+    const over=game.isGameOver();
     if(over.over){
-      if(over.result==="mat"){
-        // side to move is mated
-        return {score: (game.turn==='w' ? -999 : 999), best:null};
-      }
+      if(over.result==="mat") return {score: (game.turn==='w'?-999:999), best:null};
       return {score: 0, best:null};
     }
-    if(depth===0){
-      return {score: game.evaluate(), best:null};
-    }
+    if(depth===0) return {score: game.evaluate(), best:null};
 
     const maximizing = (game.turn==='w');
-    let bestMove=null;
-
-    let moves = orderMoves(game.legalMoves());
-    if(moves.length===0) return {score: game.evaluate(), best:null};
-
+    let best=null;
+    const moves=orderMoves(game.legalMoves());
     if(maximizing){
       let value=-Infinity;
       for(const m of moves){
-        const g2=game.clone();
-        g2.makeMove(m);
+        const g2=game.clone(); g2.makeMove(m);
         const res=minimax(g2, depth-1, alpha, beta);
-        if(res.score>value){
-          value=res.score; bestMove=m;
-        }
+        if(res.score>value){ value=res.score; best=m; }
         alpha=Math.max(alpha,value);
         if(alpha>=beta) break;
       }
-      return {score:value, best:bestMove};
+      return {score:value, best};
     } else {
       let value=Infinity;
       for(const m of moves){
-        const g2=game.clone();
-        g2.makeMove(m);
+        const g2=game.clone(); g2.makeMove(m);
         const res=minimax(g2, depth-1, alpha, beta);
-        if(res.score<value){
-          value=res.score; bestMove=m;
-        }
+        if(res.score<value){ value=res.score; best=m; }
         beta=Math.min(beta,value);
         if(alpha>=beta) break;
       }
-      return {score:value, best:bestMove};
+      return {score:value, best};
     }
   }
 
-  /* =========================
-     UI
-     ========================= */
-  const boardEl = document.getElementById("board");
-  const turnLbl = document.getElementById("turnLbl");
-  const stateLbl = document.getElementById("stateLbl");
-  const evalLbl = document.getElementById("evalLbl");
-  const openingLbl = document.getElementById("openingLbl");
-  const lastMoveLbl = document.getElementById("lastMoveLbl");
-  const coachText = document.getElementById("coachText");
-  const analystText = document.getElementById("analystText");
-  const movesBox = document.getElementById("movesBox");
+  // UI elems
+  const boardEl=document.getElementById("board");
+  const turnLbl=document.getElementById("turnLbl");
+  const stateLbl=document.getElementById("stateLbl");
+  const evalLbl=document.getElementById("evalLbl");
+  const openingLbl=document.getElementById("openingLbl");
+  const lastMoveLbl=document.getElementById("lastMoveLbl");
+  const movesBox=document.getElementById("movesBox");
+  const kaganText=document.getElementById("kaganText");
+  const dedeText=document.getElementById("dedeText");
 
-  const aiLevelSel = document.getElementById("aiLevel");
-  const resetBtn = document.getElementById("resetBtn");
-  const flipBtn = document.getElementById("flipBtn");
+  const aiLevelSel=document.getElementById("aiLevel");
+  const resetBtn=document.getElementById("resetBtn");
+  const flipBtn=document.getElementById("flipBtn");
 
-  const PIECE_UNICODE = {
+  const splash=document.getElementById("splash");
+  const startBtn=document.getElementById("startBtn");
+  const skipBtn=document.getElementById("skipBtn");
+
+  const PIECE_UNI = {
     K:"♔", Q:"♕", R:"♖", B:"♗", N:"♘", P:"♙",
     k:"♚", q:"♛", r:"♜", b:"♝", n:"♞", p:"♟"
   };
 
-  let game = new Chess();
-  let flipped = false;     // if true show from black perspective
-  let selected = null;     // {r,c}
-  let legalFromSelected = [];
-  let lastMoveSquares = null; // {from:{},to:{}}
-  let thinking = false;
-  let pendingPromotion = null; // {moveCandidates:[], to:{}, from:{}, color}
+  let game=new Chess();
+  let flipped=false;
+  let selected=null;
+  let legalFromSelected=[];
+  let lastMoveSquares=null;
+  let thinking=false;
+  let pendingPromotion=null;
 
-  function coordToIndexDisplay(r,c){
-    // display order changes when flipped
-    if(!flipped) return {r,c};
-    return {r:7-r, c:7-c};
-  }
   function displayToCoord(dr,dc){
     if(!flipped) return {r:dr,c:dc};
-    return {r:7-dr, c:7-dc};
+    return {r:7-dr,c:7-dc};
   }
 
   function render(){
     boardEl.innerHTML="";
-    const over = game.isGameOver();
-    const evalScore = game.evaluate();
-    evalLbl.textContent = (evalScore>=0?"+":"") + evalScore.toFixed(1);
-    turnLbl.textContent = game.turn==='w' ? "Beyaz" : "Siyah";
-    openingLbl.textContent = detectOpening(game.openingMoves);
-    if(over.over){
-      if(over.result==="mat"){
-        stateLbl.textContent = "MAT";
-      } else if(over.result==="pat"){
-        stateLbl.textContent = "PAT";
-      } else if(over.result==="50"){
-        stateLbl.textContent = "50 hamle kuralı";
-      } else stateLbl.textContent = "Bitti";
-    } else {
-      stateLbl.textContent = thinking ? "AI düşünüyor..." : "Hazır";
-    }
+    const over=game.isGameOver();
+    const ev=game.evaluate();
+    evalLbl.textContent=(ev>=0?"+":"") + ev.toFixed(1);
+    turnLbl.textContent=game.turn==='w'?"Beyaz":"Siyah";
+    openingLbl.textContent=detectOpening(game.openingMoves);
 
-    // squares
+    stateLbl.textContent = over.over
+      ? (over.result==="mat"?"MAT":over.result==="pat"?"PAT":over.result==="50"?"50 hamle":"Bitti")
+      : (thinking?"AI düşünüyor...":"Hazır");
+
     for(let dr=0;dr<8;dr++){
       for(let dc=0;dc<8;dc++){
-        const {r,c} = displayToCoord(dr,dc);
-        const sq = document.createElement("div");
-        sq.className = "sq " + ((dr+dc)%2===0 ? "light" : "dark");
-        sq.dataset.r = r;
-        sq.dataset.c = c;
+        const {r,c}=displayToCoord(dr,dc);
+        const sq=document.createElement("div");
+        sq.className="sq " + ((dr+dc)%2===0 ? "light" : "dark");
+        sq.dataset.r=r; sq.dataset.c=c;
 
-        const p = game.pieceAt(r,c);
-        if(p) sq.textContent = PIECE_UNICODE[p] || "";
+        const p=game.pieceAt(r,c);
+        if(p) sq.textContent=PIECE_UNI[p]||"";
 
-        // selection highlight
         if(selected && selected.r===r && selected.c===c) sq.classList.add("sel");
-
-        // legal target highlight
         if(selected){
           for(const m of legalFromSelected){
-            if(m.to.r===r && m.to.c===c){
-              sq.classList.add(m.captured || m.enPassant ? "cap" : "move");
-            }
+            if(m.to.r===r && m.to.c===c) sq.classList.add(m.captured||m.enPassant ? "cap" : "move");
           }
         }
 
-        // last move highlight
         if(lastMoveSquares){
           if(lastMoveSquares.from.r===r && lastMoveSquares.from.c===c) sq.classList.add("lastFrom");
           if(lastMoveSquares.to.r===r && lastMoveSquares.to.c===c) sq.classList.add("lastTo");
         }
 
-        // check highlight on king square
         if(game.inCheck(game.turn)){
-          const k = game.kingPos(game.turn);
+          const k=game.kingPos(game.turn);
           if(k && k.r===r && k.c===c) sq.classList.add("check");
         }
 
@@ -1070,193 +803,165 @@
     }
 
     renderMoves();
-    renderCoachAndAnalyst();
+    renderKaganHint();
   }
 
   function renderMoves(){
     movesBox.innerHTML="";
-    // display in pairs
     for(let i=0;i<game.sanHistory.length;i+=2){
-      const moveNo = 1 + Math.floor(i/2);
-      const w = game.sanHistory[i] || "";
-      const b = game.sanHistory[i+1] || "";
+      const moveNo=1+Math.floor(i/2);
+      const w=game.sanHistory[i]||"";
+      const b=game.sanHistory[i+1]||"";
       const div=document.createElement("div");
-      div.textContent = `${moveNo}. ${w}   ${b}`;
+      div.textContent=`${moveNo}. ${w}   ${b}`;
       movesBox.appendChild(div);
     }
   }
 
-  function renderCoachAndAnalyst(){
-    const over = game.isGameOver();
-    if(over.over){
-      if(over.result==="mat"){
-        const winner = game.turn==='w' ? "Siyah" : "Beyaz";
-        coachText.innerHTML = `<span class="good">Komutan:</span> Oyun bitti. <b>${winner}</b> MAT etti.`;
-        analystText.innerHTML = `Analist: Son durum <b>mat</b>. İstersen “Yeniden Başlat” ile tekrar oynayalım.`;
-      } else if(over.result==="pat"){
-        coachText.innerHTML = `<span class="warn">Komutan:</span> PAT! Bu beraberlik türüdür.`;
-        analystText.innerHTML = `Analist: Hamle yok ama şah çekilmiyor → <b>pat</b>.`;
-      } else {
-        coachText.innerHTML = `<span class="warn">Komutan:</span> Oyun bitti (${over.result}).`;
-        analystText.innerHTML = `Analist: Beraberlik/bitim kuralı devreye girdi.`;
-      }
-      return;
-    }
-
-    // Basic coach suggestion: best move for side to move (quick shallow)
-    const level = parseInt(aiLevelSel.value,10);
-    const depth = Math.min(2, chooseDepth(level)); // keep coach light
-    const res = minimax(game.clone(), depth, -Infinity, Infinity);
-    if(res.best){
-      const san = game.sanFor(res.best);
-      const evalNow = game.evaluate();
-      const g2 = game.clone(); g2.makeMove(res.best);
-      const evalAfter = g2.evaluate();
-      const delta = (evalAfter - evalNow) * (game.turn==='w' ? 1 : -1); // improvement from side-to-move view
-
-      const msg =
-        `Önerim: <b>${san}</b> ` +
-        (delta > 0.35 ? `<span class="good">(güçlü)</span>` :
-         delta < -0.25 ? `<span class="bad">(riskli)</span>` :
-         `<span class="warn">(dengeli)</span>`);
-      coachText.innerHTML = `<span class="good">Komutan:</span> ${msg}`;
-    } else {
-      coachText.innerHTML = `<span class="good">Komutan:</span> Hazır. Hamleni yap.`;
-    }
-
-    // Analyst: last move commentary
-    if(game.sanHistory.length===0){
-      analystText.innerHTML = `Analist: Açılışta merkeze (e/d piyonları) ve gelişime odaklan. Rok güvenlik sağlar.`;
-    } else {
-      // last move + eval swing heuristic
-      const lastSan = game.sanHistory[game.sanHistory.length-1];
-      analystText.innerHTML = `Analist: Son hamle <b>${lastSan}</b>. Değerlendirme: <b>${evalLbl.textContent}</b>.`;
-    }
+  function legalMovesFrom(r,c){
+    return game.legalMoves().filter(m=>m.from.r===r && m.from.c===c);
   }
 
-  function sameSquare(a,b){ return a && b && a.r===b.r && a.c===b.c; }
-
-  function legalMovesFrom(r,c){
-    const leg = game.legalMoves();
-    return leg.filter(m=>m.from.r===r && m.from.c===c);
+  function showPromotionPicker(candidates){
+    pendingPromotion={candidates};
+    const isWhite=game.turn==='w';
+    const options=isWhite?["Q","R","B","N"]:["q","r","b","n"];
+    const text=isWhite
+      ?"Terfi seç: Q=Vezir, R=Kale, B=Fil, N=At (örn: Q)"
+      :"Terfi seç: q=Vezir, r=Kale, b=Fil, n=At (örn: q)";
+    let pick=prompt(text, isWhite?"Q":"q");
+    if(!pick){ pendingPromotion=null; return; }
+    pick=pick.trim();
+    const want=options.includes(pick)?pick:(isWhite?"Q":"q");
+    const mv=candidates.find(m=>m.promotion===want) || candidates[0];
+    pendingPromotion=null;
+    playMove(mv,{byAI:false});
   }
 
   function onSquareTap(e){
     if(thinking) return;
-    const r = parseInt(e.currentTarget.dataset.r,10);
-    const c = parseInt(e.currentTarget.dataset.c,10);
+    if(pendingPromotion) return;
 
-    // If waiting promotion dialog (we do minimal prompt)
-    if(pendingPromotion){
-      // ignore board tap while promotion selection is active
-      return;
-    }
+    const r=parseInt(e.currentTarget.dataset.r,10);
+    const c=parseInt(e.currentTarget.dataset.c,10);
+    const p=game.pieceAt(r,c);
+    const us=game.turn;
 
-    const p = game.pieceAt(r,c);
-    const us = game.turn;
-
-    // if selecting own piece
     if(p && colorOf(p)===us){
       if(selected && selected.r===r && selected.c===c){
-        // deselect
         selected=null; legalFromSelected=[];
       } else {
         selected={r,c};
-        legalFromSelected = legalMovesFrom(r,c);
+        legalFromSelected=legalMovesFrom(r,c);
       }
       render();
       return;
     }
 
-    // if a piece is selected, attempt move
     if(selected){
-      const candidates = legalFromSelected.filter(m=>m.to.r===r && m.to.c===c);
-      if(candidates.length===0){
-        // tap elsewhere: clear
-        selected=null; legalFromSelected=[];
-        render();
-        return;
-      }
-
-      // handle promotion choice if multiple promotions (pawn reaching last rank)
-      if(candidates.length>1 && candidates.some(m=>m.promotion)){
-        showPromotionPicker(candidates);
-        return;
-      }
-
-      const mv = candidates[0];
-      playMove(mv, {byAI:false});
+      const candidates=legalFromSelected.filter(m=>m.to.r===r && m.to.c===c);
+      if(candidates.length===0){ selected=null; legalFromSelected=[]; render(); return; }
+      if(candidates.length>1 && candidates.some(m=>m.promotion)){ showPromotionPicker(candidates); return; }
+      playMove(candidates[0],{byAI:false});
     }
   }
 
-  function showPromotionPicker(candidates){
-    pendingPromotion = {candidates};
-    const color = game.turn;
-    const isWhite = color==='w';
-    const options = isWhite ? ["Q","R","B","N"] : ["q","r","b","n"];
+  // ====== Kağan (Koç) + Dede (Analist) metinleri ======
+  const KAGAN_QUOTES = [
+    "“Her Türk asker doğar. Görev değişir; töre değişmez.”",
+    "“Merkezi tut. Şahını koru. Zafer sabırla gelir.”",
+    "“Düşmanı küçümseme. Tek hamle savaşın kaderini değiştirir.”",
+    "“Taşlarını geliştir; sonra hücum et.”"
+  ];
+  const DEDE_TIPS_OPEN = [
+    "Evlat, açılışta taşlarını çıkar. Veziri erken sürme.",
+    "Merkez piyonları (e/d) oyunun direğidir.",
+    "Rok gecikmesin; şah güvenliği töredir.",
+  ];
+  const DEDE_TIPS_MID = [
+    "Taşların uyumu ordunun düzenidir.",
+    "Zayıf kareye yüklen; gereksiz piyon hamlesi yapma.",
+    "Plan kur: hedef seç, baskıyı artır.",
+  ];
+  const DEDE_TIPS_END = [
+    "Son oyunda şah da askerdir; merkeze yürü.",
+    "Geçer piyon, sancağı taşır.",
+    "Az taş, net plan: sadeleştir ve bitir.",
+  ];
 
-    // quick native prompt (simple & reliable on phone)
-    const text = isWhite
-      ? "Terfi seç: Q=Vezir, R=Kale, B=Fil, N=At (örn: Q)"
-      : "Terfi seç: q=Vezir, r=Kale, b=Fil, n=At (örn: q)";
-    let pick = prompt(text, isWhite ? "Q" : "q");
-    if(!pick){ pendingPromotion=null; return; }
-    pick = pick.trim();
-    const want = options.includes(pick) ? pick : (isWhite ? "Q" : "q");
-    const mv = candidates.find(m=>m.promotion===want) || candidates[0];
-    pendingPromotion=null;
-    playMove(mv, {byAI:false});
+  function pick(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+
+  function renderKaganHint(){
+    const ply=game.sanHistory.length;
+    const opening=detectOpening(game.openingMoves);
+    if(ply===0){
+      kaganText.innerHTML = `<span class="good">Kağan:</span> ${KAGAN_QUOTES[0]} <span class="warn">İlk hamleni yap.</span>`;
+      return;
+    }
+    if(ply<=8){
+      kaganText.innerHTML = `<span class="good">Kağan:</span> Açılışta <b>gelişim</b> ve <b>merkez</b>. Rok gecikmesin.`;
+      if(opening!=="-") kaganText.innerHTML += ` <span class="tag">Açılış: <b>${opening}</b></span>`;
+      return;
+    }
+    if(ply<=28){
+      kaganText.innerHTML = `<span class="good">Kağan:</span> Orta oyunda hedef seç: <b>zayıf piyon</b> veya <b>zayıf kare</b>. Taşlarını aktif tut.`;
+      return;
+    }
+    kaganText.innerHTML = `<span class="good">Kağan:</span> Son oyunda <b>piyon sür</b>, <b>şahı aktif et</b>, geçer piyon yarat.`;
   }
 
-  function playMove(move, {byAI}){
-    // SAN must be computed before applying (because it depends on current position)
+  function updateDedeAfterMove(san, qualityTag){
+    const ply=game.sanHistory.length;
+    const opening=detectOpening(game.openingMoves);
+
+    let base="";
+    if(ply<=10) base = pick(DEDE_TIPS_OPEN);
+    else if(ply<=30) base = pick(DEDE_TIPS_MID);
+    else base = pick(DEDE_TIPS_END);
+
+    const op = (opening!=="-") ? ` Açılış izi: <b>${opening}</b>.` : "";
+    dedeText.innerHTML = `<span class="warn">Dede:</span> <b>${san}</b> ${qualityTag} ${op}<br><span style="color:var(--muted)">${base}</span>`;
+  }
+
+  // ====== move play + analysis ======
+  function playMove(move,{byAI}){
     const san = game.sanFor(move);
 
-    // basic analyst: compare with best (depth 2) and call it blunder/inaccuracy
+    // compare to a shallow best move for a simple “hata/iyi” etiketi
+    const depth = Math.min(2, chooseDepth(parseInt(aiLevelSel.value,10)));
+    const bestRes = minimax(game.clone(), depth, -Infinity, Infinity);
     const beforeEval = game.evaluate();
-    const bestRes = minimax(game.clone(), Math.min(2, chooseDepth(parseInt(aiLevelSel.value,10))), -Infinity, Infinity);
     let bestEval = beforeEval;
     if(bestRes.best){
-      const gBest = game.clone(); gBest.makeMove(bestRes.best);
-      bestEval = gBest.evaluate();
+      const gB=game.clone(); gB.makeMove(bestRes.best);
+      bestEval = gB.evaluate();
     }
 
     game.makeMove(move);
-
-    const afterEval = game.evaluate();
     game.sanHistory.push(san);
     lastMoveSquares = {from: move.from, to: move.to};
     lastMoveLbl.textContent = san;
 
-    // analyst text update (move quality)
+    const afterEval = game.evaluate();
     const sideJustMoved = game.turn==='w' ? 'b' : 'w';
-    const movedName = sideJustMoved==='w' ? "Beyaz" : "Siyah";
-    const swing = (afterEval - bestEval) * (sideJustMoved==='w' ? 1 : -1); // worse if negative
+    const swing = (afterEval - bestEval) * (sideJustMoved==='w' ? 1 : -1);
 
-    let quality = "";
-    if(Math.abs(swing) < 0.15) quality = `<span class="good">iyi hamle</span>`;
-    else if(Math.abs(swing) < 0.45) quality = `<span class="warn">isabetsiz hamle</span>`;
-    else quality = `<span class="bad">blunder (ciddi hata)</span>`;
+    let qualityTag = `<span class="warn">(dengeli)</span>`;
+    if(Math.abs(swing) < 0.15) qualityTag = `<span class="good">(iyi)</span>`;
+    else if(Math.abs(swing) < 0.45) qualityTag = `<span class="warn">(isabetsiz)</span>`;
+    else qualityTag = `<span class="bad">(ciddi hata)</span>`;
 
-    analystText.innerHTML =
-      `Analist: ${movedName} <b>${san}</b> oynadı → ${quality}. ` +
-      `Açılış: <b>${detectOpening(game.openingMoves)}</b>. ` +
-      `Eval: <b>${(afterEval>=0?"+":"") + afterEval.toFixed(1)}</b>`;
+    // Dede yorum
+    updateDedeAfterMove(san, qualityTag);
 
-    // clear selection
     selected=null; legalFromSelected=[];
-
     render();
 
-    // If game over, stop.
     if(game.isGameOver().over) return;
 
-    // If human moved and it's AI's turn (we make AI always play black by default? We'll do: AI plays the side to move if it's not white? Actually allow AI both sides? Simpler: AI plays opponent of human; assume human is White unless flipped? We'll do: AI plays black always.)
-    if(!byAI){
-      // AI plays black
-      if(game.turn==='b'){
-        setTimeout(aiMove, 30);
-      }
+    // AI always plays black
+    if(!byAI && game.turn==='b'){
+      setTimeout(aiMove, 40);
     }
   }
 
@@ -1265,54 +970,55 @@
     if(game.isGameOver().over) return;
     if(game.turn!=='b') return;
 
-    thinking = true;
+    thinking=true;
     render();
 
-    const level = parseInt(aiLevelSel.value,10);
-    const depth = chooseDepth(level);
+    const level=parseInt(aiLevelSel.value,10);
+    const depth=chooseDepth(level);
 
-    // compute in timeout to allow UI paint
     setTimeout(()=>{
-      const res = minimax(game.clone(), depth, -Infinity, Infinity);
-      const mv = res.best || game.legalMoves()[0];
-      thinking = false;
-
+      const res=minimax(game.clone(), depth, -Infinity, Infinity);
+      const mv=res.best || game.legalMoves()[0];
+      thinking=false;
       if(!mv){ render(); return; }
-
-      // AI plays
-      playMove(mv, {byAI:true});
-
-      // Komutan message after AI move
-      coachText.innerHTML = `<span class="good">Komutan:</span> Düşman hamlesi geldi. Planını kur: <b>gelişim</b> + <b>şah güvenliği</b> + <b>merkez</b>.`;
+      playMove(mv,{byAI:true});
+      // AI hamlesinden sonra Kağan kısa komut
+      kaganText.innerHTML = `<span class="good">Kağan:</span> Düşman oynadı. <b>Merkez</b> + <b>gelişim</b> + <b>şah güvenliği</b>.`;
       render();
-    }, 40);
+    }, 50);
   }
 
   function reset(){
-    game = new Chess();
-    selected=null;
-    legalFromSelected=[];
+    game=new Chess();
+    selected=null; legalFromSelected=[];
     lastMoveSquares=null;
     thinking=false;
     pendingPromotion=null;
     lastMoveLbl.textContent="-";
-    coachText.textContent="Hazır. İlk hamleni bekliyorum.";
-    analystText.textContent="Hamle bekleniyor.";
+    kaganText.innerHTML=`<span class="good">Kağan:</span> ${pick(KAGAN_QUOTES)} <span class="warn">İlk hamleni yap.</span>`;
+    dedeText.innerHTML=`<span class="warn">Dede:</span> Hamle bekleniyor. <span style="color:var(--muted)">Evlat, önce gelişim; sonra hücum.</span>`;
     render();
   }
 
-  flipBtn.addEventListener("click", ()=>{
-    flipped = !flipped;
-    render();
-  });
+  flipBtn.addEventListener("click", ()=>{ flipped=!flipped; render(); });
   resetBtn.addEventListener("click", reset);
+  aiLevelSel.addEventListener("change", ()=>render());
 
-  // If user changes AI level, just update coach hints
-  aiLevelSel.addEventListener("change", ()=>{
-    render();
+  // Splash controls
+  function closeSplash(){
+    splash.classList.add("hide");
+    // start with a Kağan message once
+    kaganText.innerHTML=`<span class="good">Kağan:</span> ${pick(KAGAN_QUOTES)} <span class="warn">İlk hamleni yap.</span>`;
+    dedeText.innerHTML=`<span class="warn">Dede:</span> Hamle bekleniyor. <span style="color:var(--muted)">Merkez ve rok; ikisi de töredir.</span>`;
+  }
+  startBtn.addEventListener("click", closeSplash);
+  skipBtn.addEventListener("click", closeSplash);
+  // also allow tap anywhere to start
+  splash.addEventListener("click", (e)=>{
+    if(e.target === splash) closeSplash();
   });
 
-  // Start
+  // init
   render();
 })();
 </script>

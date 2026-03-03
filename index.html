@@ -615,4 +615,162 @@
       return bestMove || moves[0];
     }
 
-    function aiMove()
+    function aiMove(){
+      if(game.isGameOver()) return;
+      aiBusy = true;
+
+      const m = pickBestMove();
+      game.move(m);
+
+      // Dede yorum
+      dedeComment();
+      // Kağan emir
+      kaganLog.textContent = "Kağan: “Düzen bozulmasın.”";
+
+      aiBusy = false;
+      renderBoard();
+    }
+
+    /***************
+     * 5) Hamle sonrası Kağan önerisi (basit ama düzgün)
+     ***************/
+    function afterHumanMove(chosen){
+      openingNameEl.textContent = detectOpening();
+
+      // Kağan: bir sonraki hamleye “öneri” (white için)
+      if(game.turn()==="b"){
+        // insan beyaz oynadıysa, Kağan bir emir daha desin
+        const hint = KAGAN_ORDERS[Math.floor(Math.random()*KAGAN_ORDERS.length)];
+        kaganHint.textContent = "Öneri: " + hint;
+        setTimeout(()=>kaganHint.textContent="",2500);
+      }
+
+      // Dede her hamle sonrası destansı yorum
+      dedeComment();
+    }
+
+    /***************
+     * 6) Müzik (Local playlist) — çalmıyorsa sebep ya autoplay ya dosya yok
+     ***************/
+    const localSelect = document.getElementById("localSelect");
+    const playBtn = document.getElementById("playBtn");
+    const nextBtn = document.getElementById("nextBtn");
+    const stopBtn = document.getElementById("stopBtn");
+    const bgAudio = document.getElementById("bgAudio");
+    const nowPlaying = document.getElementById("nowPlaying");
+    const musicNote = document.getElementById("musicNote");
+
+    const LOCAL_TRACKS = [
+      { title: "Epik 1 (telifsiz)", src: "audio/epic1.mp3" },
+      { title: "Epik 2 (telifsiz)", src: "audio/epic2.mp3" },
+      { title: "Epik 3 (telifsiz)", src: "audio/epic3.mp3" },
+      { title: "Epik 4 (telifsiz)", src: "audio/epic4.mp3" },
+      { title: "Epik 5 (telifsiz)", src: "audio/epic5.mp3" },
+      { title: "Epik 6 (telifsiz)", src: "audio/epic6.mp3" },
+      { title: "Epik 7 (telifsiz)", src: "audio/epic7.mp3" },
+      { title: "Epik 8 (telifsiz)", src: "audio/epic8.mp3" },
+      { title: "Epik 9 (telifsiz)", src: "audio/epic9.mp3" },
+      { title: "Epik 10 (telifsiz)", src: "audio/epic10.mp3" }
+    ];
+    let localIndex = 0;
+    let userStartedMusic = false;
+
+    function fillLocal(){
+      localSelect.innerHTML = "";
+      LOCAL_TRACKS.forEach((t,i)=>{
+        const opt = document.createElement("option");
+        opt.value = String(i);
+        opt.textContent = t.title;
+        localSelect.appendChild(opt);
+      });
+    }
+    fillLocal();
+
+    function setNow(){
+      nowPlaying.textContent = "Şimdi: " + LOCAL_TRACKS[localIndex].title;
+    }
+
+    function loadTrack(i, autoplay){
+      localIndex = i;
+      localSelect.value = String(i);
+      bgAudio.src = LOCAL_TRACKS[i].src;
+      setNow();
+
+      // Dosya yoksa hata verir => kullanıcıya göster
+      bgAudio.load();
+      if(autoplay){
+        userStartedMusic = true;
+        bgAudio.play().then(()=>{
+          musicNote.textContent = "Müzik çalıyor. (Sekme uykuya girerse telefon durdurabilir.)";
+        }).catch(()=>{
+          musicNote.textContent = "Tarayıcı engelledi. Lütfen tekrar “Çal”a bas.";
+        });
+      }
+    }
+
+    playBtn.addEventListener("click", ()=>{
+      const i = parseInt(localSelect.value,10);
+      loadTrack(i,true);
+    });
+    nextBtn.addEventListener("click", ()=>{
+      const next = (localIndex+1) % LOCAL_TRACKS.length;
+      loadTrack(next, true);
+    });
+    stopBtn.addEventListener("click", ()=>{
+      bgAudio.pause(); bgAudio.currentTime = 0;
+      musicNote.textContent = "Durduruldu.";
+    });
+
+    bgAudio.addEventListener("ended", ()=>{
+      if(!userStartedMusic) return;
+      const next = (localIndex+1) % LOCAL_TRACKS.length;
+      loadTrack(next, true);
+    });
+
+    bgAudio.addEventListener("error", ()=>{
+      musicNote.textContent =
+        "Müzik dosyası bulunamadı. Repo’da audio/epic1.mp3 gibi dosyalar olmalı. (Upload etmeden çalmaz.)";
+    });
+
+    // ilk parça hazır dursun
+    loadTrack(0,false);
+
+    /***************
+     * 7) Reset / Flip
+     ***************/
+    resetBtn.addEventListener("click", ()=>{
+      game.reset();
+      clearSelection();
+      openingNameEl.textContent = "-";
+      kaganSpeakStart();
+      dedeLog.textContent = "Dede: “Yiğit, ilk hamleni beklerim.”";
+      renderBoard();
+      showIntro();
+    });
+
+    flipBtn.addEventListener("click", ()=>{
+      flipped = !flipped;
+      renderBoard();
+    });
+
+    aiLevelSel.addEventListener("change", ()=>{
+      // seviye değişince eğer sırada AI varsa oynasın
+      if(shouldAIPlay() && !aiBusy){
+        setTimeout(aiMove, 200);
+      }
+    });
+
+    /***************
+     * 8) INIT — en kritik: DOM hazır + tahta çiz
+     ***************/
+    function init(){
+      // Tahta kesin çizilsin
+      renderBoard();
+      // Intro kesin çıksın (atasözü + Orhun)
+      showIntro();
+    }
+
+    document.addEventListener("DOMContentLoaded", init);
+  </script>
+</body>
+</html>

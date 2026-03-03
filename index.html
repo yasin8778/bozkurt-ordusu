@@ -37,8 +37,13 @@
       display:flex;align-items:center;justify-content:space-between;gap:12px;
     }
     .brand{display:flex;flex-direction:column;gap:3px;min-width:220px}
-    .brand .t{font-size:22px;font-weight:850;letter-spacing:.2px}
+    .brand .t{font-size:22px;font-weight:850;letter-spacing:.2px;display:flex;align-items:center;gap:10px}
     .brand .s{color:var(--muted);font-size:12.5px;line-height:1.35}
+    .wolfIcon{
+      width:26px;height:26px;flex:0 0 auto;
+      filter: drop-shadow(0 8px 18px rgba(79,140,255,.25));
+      opacity:.95;
+    }
     .controls{display:flex;flex-wrap:wrap;gap:10px;justify-content:flex-end;align-items:center}
     select, button{
       background:rgba(255,255,255,.06);
@@ -116,6 +121,29 @@
     .sq.check{outline:3px solid rgba(255,92,122,.95);outline-offset:-3px}
     .lastFrom, .lastTo{outline:3px solid rgba(255,209,102,.85);outline-offset:-3px}
 
+    /* TAŞLAR: siyah daha belirgin */
+    .piece{
+      line-height:1;
+      transform: translateZ(0);
+      user-select:none;
+      -webkit-user-select:none;
+    }
+    .piece.w{
+      text-shadow:
+        0 2px 0 rgba(0,0,0,.22),
+        0 0 10px rgba(255,255,255,.22),
+        0 0 2px rgba(0,0,0,.25);
+    }
+    .piece.b{
+      /* siyah taşları “parlat”: kenar aydınlığı + gölge */
+      text-shadow:
+        0 0 2px rgba(255,255,255,.55),
+        0 0 8px rgba(255,255,255,.35),
+        0 3px 0 rgba(0,0,0,.45),
+        0 0 14px rgba(0,0,0,.25);
+      filter: contrast(1.15);
+    }
+
     /* Side panel */
     .sideTitle{font-weight:850;font-size:16px;margin:2px 0 10px}
     .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:10px 0 10px}
@@ -144,6 +172,11 @@
     .moves div{padding:3px 0;border-bottom:1px dashed rgba(255,255,255,.08)}
     .hint{color:var(--muted);font-size:12.5px;line-height:1.45;margin-top:10px}
     .good{color:var(--good)} .bad{color:var(--bad)} .warn{color:var(--warn)}
+
+    /* Music mini */
+    .musicRow{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:10px}
+    .musicRow input[type="range"]{width:120px}
+    .musicNow{color:var(--muted);font-size:12px;line-height:1.3}
 
     /* SPLASH (Orhun animasyonu) */
     .splash{
@@ -192,7 +225,6 @@
     }
     @keyframes typing{ from{width:0} to{width:100%} }
     @keyframes caret{ 50%{border-color:transparent} }
-
     .splashQuote{
       margin-top:14px;
       padding:12px 12px;
@@ -233,7 +265,6 @@
       <div class="splashTop">🇹🇷 Bozkurt Ordusu <span style="opacity:.7">(Börüler)</span></div>
       <div class="splashSub">Töre ile oyna. Akıl ile kazan. (Offline motor)</div>
 
-      <!-- Not: Buradaki runeler “Orhun esintisi” olarak kullanılıyor -->
       <div class="runes">𐰉𐰇𐰺𐰇  ·  𐰴𐰍𐰣  ·  𐰉𐰇𐰺𐰇</div>
       <div class="typeLine">𐰉𐰇𐰺𐰇 (Börü) · 𐰴𐰍𐰣 (Kağan) · 𐰑𐰓𐰑𐰓 (Dede) — Savaş Başlıyor…</div>
 
@@ -242,17 +273,27 @@
       </div>
 
       <div class="splashBtnRow">
-        <div class="splashBtn primary" id="startBtn">Başlat</div>
-        <div class="splashBtn" id="skipBtn">Geç</div>
+        <div class="splashBtn primary" id="startBtn">Başlat (Müzik Aç)</div>
+        <div class="splashBtn" id="startSilentBtn">Sessiz Başlat</div>
       </div>
-      <div class="splashNote">İpucu: Beyaz sen, Siyah AI. Rok yapmayı unutma.</div>
+      <div class="splashNote">
+        Not: Mobil tarayıcılar otomatik müziği engeller. Başlat’a basınca giriş müziği başlar.<br>
+        Müzik dosyaları repo’da <b>/audio/</b> klasöründe olmalı.
+      </div>
     </div>
   </div>
 
   <div class="wrap">
     <div class="top">
       <div class="brand">
-        <div class="t">🇹🇷 Bozkurt Ordusu <span style="opacity:.7">(Börüler)</span></div>
+        <div class="t">
+          <!-- küçük kurt başı simgesi (inline svg) -->
+          <svg class="wolfIcon" viewBox="0 0 64 64" aria-hidden="true">
+            <path fill="rgba(255,255,255,.92)" d="M8 40c2-9 7-16 15-21l4-7 5 9c4-2 9-2 13 0l5-9 4 7c8 5 13 12 15 21-4-2-8-2-12 0-2 6-6 11-12 14-3 2-6 3-8 3s-5-1-8-3c-6-3-10-8-12-14-4-2-8-2-12 0z"/>
+            <path fill="rgba(79,140,255,.55)" d="M22 42c3 7 9 12 10 12s7-5 10-12c-4 2-8 3-10 3s-6-1-10-3z"/>
+          </svg>
+          Bozkurt Ordusu <span style="opacity:.7">(Börüler)</span>
+        </div>
         <div class="s">𐰉𐰇𐰺𐰇 – Börü · 𐰴𐰍𐰣 – Kağan · 𐰑𐰓𐰑𐰓 – Dede</div>
       </div>
       <div class="controls">
@@ -263,6 +304,7 @@
           <option value="4">AI: Zor</option>
         </select>
         <button id="flipBtn">Tahtayı Çevir</button>
+        <button id="musicBtn">Müzik: Kapalı</button>
         <button class="primary" id="resetBtn">Yeniden Başlat</button>
       </div>
     </div>
@@ -301,16 +343,99 @@
           <div style="margin-top:8px;color:var(--muted)" id="dedeText">Hamle bekleniyor.</div>
         </div>
 
+        <div class="musicRow">
+          <span class="tag">Ses</span>
+          <input id="vol" type="range" min="0" max="1" step="0.01" value="0.8" />
+          <button id="nextTrackBtn">Sonraki</button>
+        </div>
+        <div class="musicNow" id="musicNow">Müzik listesi: /audio/ klasöründen çalar.</div>
+
         <div class="moves" id="movesBox" aria-label="Hamle listesi"></div>
         <div class="hint">
-          Not: “AI: Zor” seviyesi bazı telefonlarda yavaşlayabilir (normal). İstersen hızlandırırım.
+          İpucu: “AI: Zor” bazı telefonlarda yavaşlayabilir. İstersen hız odaklı motor yaparım.
         </div>
       </div>
     </div>
   </div>
 
+  <!-- Offline Audio Player -->
+  <audio id="player" preload="auto"></audio>
+
 <script>
 (() => {
+  // ================== MUSIC ==================
+  // TELİF NOTU: Bu sadece senin repo'ya koyduğun dosyaları çalar.
+  // Örnek: /audio/bozkurt-ordusu.mp3, /audio/turkluk-1.mp3 ...
+  const PLAYLIST = [
+    { title: "Bozkurt Ordusu (Giriş)", src: "audio/bozkurt-ordusu.mp3" },
+    { title: "Türklüğe Dair 1", src: "audio/turkluk-1.mp3" },
+    { title: "Türklüğe Dair 2", src: "audio/turkluk-2.mp3" },
+    { title: "Türklüğe Dair 3", src: "audio/turkluk-3.mp3" },
+  ];
+
+  const player = document.getElementById("player");
+  const musicBtn = document.getElementById("musicBtn");
+  const vol = document.getElementById("vol");
+  const nextTrackBtn = document.getElementById("nextTrackBtn");
+  const musicNow = document.getElementById("musicNow");
+
+  let musicOn = false;
+  let trackIndex = 0;
+
+  function setNow(){
+    const t = PLAYLIST[trackIndex];
+    musicNow.textContent = t ? `Şimdi çalıyor: ${t.title}` : "Müzik listesi boş.";
+  }
+
+  function loadTrack(i){
+    if(!PLAYLIST.length) return;
+    trackIndex = (i + PLAYLIST.length) % PLAYLIST.length;
+    player.src = PLAYLIST[trackIndex].src;
+    setNow();
+  }
+
+  async function tryPlay(){
+    if(!PLAYLIST.length) return;
+    if(!player.src) loadTrack(trackIndex);
+    player.volume = parseFloat(vol.value || "0.8");
+    try{
+      await player.play();
+      musicOn = true;
+      musicBtn.textContent = "Müzik: Açık";
+    }catch(e){
+      // Autoplay engeli vb.
+      musicOn = false;
+      musicBtn.textContent = "Müzik: Kapalı";
+      musicNow.textContent = "Müzik çalamadı. Dosya yoksa /audio/ içine mp3 ekle. (Mobilde Başlat ile açılır)";
+    }
+  }
+
+  function stopMusic(){
+    try{ player.pause(); }catch{}
+    musicOn = false;
+    musicBtn.textContent = "Müzik: Kapalı";
+  }
+
+  player.addEventListener("ended", ()=>{
+    if(!musicOn) return;
+    loadTrack(trackIndex+1);
+    tryPlay();
+  });
+
+  musicBtn.addEventListener("click", ()=>{
+    if(musicOn) stopMusic();
+    else tryPlay();
+  });
+
+  vol.addEventListener("input", ()=>{
+    player.volume = parseFloat(vol.value || "0.8");
+  });
+
+  nextTrackBtn.addEventListener("click", ()=>{
+    loadTrack(trackIndex+1);
+    if(musicOn) tryPlay();
+  });
+
   // =============== helpers ===============
   const FILES = "abcdefgh";
   const RANKS = "87654321";
@@ -456,8 +581,9 @@
           }
           if(this.ep){
             const {r:er,c:ec}=parseSq(this.ep);
-            if(er===r+dir && Math.abs(ec-c)===1){
-              const capR = er - dir;
+            if(er===r+(us==='w'?-1:1) && Math.abs(ec-c)===1){
+              const dir2 = us==='w' ? -1 : 1;
+              const capR = er - dir2;
               const cap = this.board[capR][ec];
               if(cap && typeOf(cap)==='p' && colorOf(cap)===opp) push(from,{r:er,c:ec},{piece:p,captured:cap,enPassant:true});
             }
@@ -645,7 +771,7 @@
         const col=colorOf(p);
         const t=typeOf(p);
         let v=pieceValues[t];
-        const center = (3.5 - Math.abs(3.5-c) + 3.5 - Math.abs(3.5-r)); // 0..7
+        const center = (3.5 - Math.abs(3.5-c) + 3.5 - Math.abs(3.5-r));
         v += (t==='p' ? center*1.2 : center*1.8);
         score += (col==='w'? v : -v);
       }
@@ -738,7 +864,7 @@
 
   const splash=document.getElementById("splash");
   const startBtn=document.getElementById("startBtn");
-  const skipBtn=document.getElementById("skipBtn");
+  const startSilentBtn=document.getElementById("startSilentBtn");
 
   const PIECE_UNI = {
     K:"♔", Q:"♕", R:"♖", B:"♗", N:"♘", P:"♙",
@@ -778,7 +904,12 @@
         sq.dataset.r=r; sq.dataset.c=c;
 
         const p=game.pieceAt(r,c);
-        if(p) sq.textContent=PIECE_UNI[p]||"";
+        if(p){
+          const sp=document.createElement("span");
+          sp.className="piece " + (colorOf(p)==='w' ? "w" : "b");
+          sp.textContent=PIECE_UNI[p]||"";
+          sq.appendChild(sp);
+        }
 
         if(selected && selected.r===r && selected.c===c) sq.classList.add("sel");
         if(selected){
@@ -866,27 +997,65 @@
     }
   }
 
-  // ====== Kağan (Koç) + Dede (Analist) metinleri ======
+  // ====== Kağan (Koç) + Dede (Analist) ======
+  const KAGAN_OPEN_CMD = [
+    "“Merkeze hükmet!”",
+    "“Taşlarını çıkar, veziri sakla!”",
+    "“Şahını güvene al: Rok vakti!”",
+    "“Gereksiz piyon sürme!”",
+    "“Atlarını ileri sür, filini aç!”",
+  ];
+  const KAGAN_MID_CMD = [
+    "“Hedef seç: zayıf piyon!”",
+    "“Hat aç: kale etkin olsun!”",
+    "“Taşların uyumunu bozma!”",
+    "“Baskıyı artır; geri çekilme!”",
+    "“Değişimleri lehine yap!”",
+  ];
+  const KAGAN_END_CMD = [
+    "“Şah da askerdir: ileri!”",
+    "“Geçer piyonu sür; sancak ondadır!”",
+    "“Basitleştir, sonu getir!”",
+    "“Kale etkinliğiyle bitir!”",
+    "“Bir hamle, bir kader!”",
+  ];
   const KAGAN_QUOTES = [
     "“Her Türk asker doğar. Görev değişir; töre değişmez.”",
     "“Merkezi tut. Şahını koru. Zafer sabırla gelir.”",
-    "“Düşmanı küçümseme. Tek hamle savaşın kaderini değiştirir.”",
+    "“Düşmanı küçümseme; tek hamle kaderi yazar.”",
     "“Taşlarını geliştir; sonra hücum et.”"
   ];
-  const DEDE_TIPS_OPEN = [
-    "Evlat, açılışta taşlarını çıkar. Veziri erken sürme.",
-    "Merkez piyonları (e/d) oyunun direğidir.",
-    "Rok gecikmesin; şah güvenliği töredir.",
+
+  // Dede Korkut üslubu şablonlar
+  const DEDE_OPEN = [
+    "Ey yiğidim, açılışın direği <b>gelişim</b>dir; veziri erken koşturma.",
+    "Dinle oğul: <b>merkez</b> piyonları obanın otağıdır; orayı boş koyma.",
+    "Rok, yiğidin zırhıdır; geciktirirsen ok yer.",
   ];
-  const DEDE_TIPS_MID = [
-    "Taşların uyumu ordunun düzenidir.",
-    "Zayıf kareye yüklen; gereksiz piyon hamlesi yapma.",
-    "Plan kur: hedef seç, baskıyı artır.",
+  const DEDE_MID = [
+    "Orta oyun derin ırmaktır; taşlarını bir arada tut ki boğulmayasın.",
+    "Zayıf kare, açık yaradır; merhem bas, baskıyı artır.",
+    "Taşlar ayrı düşerse ordu bölünür; düzen bozulmasın.",
   ];
-  const DEDE_TIPS_END = [
-    "Son oyunda şah da askerdir; merkeze yürü.",
-    "Geçer piyon, sancağı taşır.",
-    "Az taş, net plan: sadeleştir ve bitir.",
+  const DEDE_END = [
+    "Son oyun çıplak kılıçtır; şah da askere döner, ileri yürür.",
+    "Geçer piyon, sancağı taşır; önünü aç, sona var.",
+    "Az taş, net töre: sadeleştir, zaferi al.",
+  ];
+  const DEDE_PRAISE = [
+    "Helal olsun yiğidim; hamlen yerini buldu.",
+    "Akıl ile oynadın; taşların söz dinledi.",
+    "Güzel yürüdün; töreye uygun hamle.",
+  ];
+  const DEDE_WARN = [
+    "Oğul, bu hamlede acele var; düşünmeden kılıç sallanmaz.",
+    "Dikkat et yiğidim; taşın açıkta kaldı, düşman göz koyar.",
+    "Bu yürüyüşte gedik var; obayı koru.",
+  ];
+  const DEDE_BAD = [
+    "Ah yiğidim… Bu hamleyle kapı aralandı; düşman içeri sızar.",
+    "Yanlış adım attın oğul; taşın bedeli ağır olabilir.",
+    "Gözün görmedi; bu hamle gönle ağır gelir.",
   ];
 
   function pick(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
@@ -894,40 +1063,46 @@
   function renderKaganHint(){
     const ply=game.sanHistory.length;
     const opening=detectOpening(game.openingMoves);
+    const cmd =
+      (ply<=8) ? pick(KAGAN_OPEN_CMD) :
+      (ply<=28) ? pick(KAGAN_MID_CMD) :
+      pick(KAGAN_END_CMD);
+
     if(ply===0){
       kaganText.innerHTML = `<span class="good">Kağan:</span> ${KAGAN_QUOTES[0]} <span class="warn">İlk hamleni yap.</span>`;
       return;
     }
-    if(ply<=8){
-      kaganText.innerHTML = `<span class="good">Kağan:</span> Açılışta <b>gelişim</b> ve <b>merkez</b>. Rok gecikmesin.`;
-      if(opening!=="-") kaganText.innerHTML += ` <span class="tag">Açılış: <b>${opening}</b></span>`;
-      return;
-    }
-    if(ply<=28){
-      kaganText.innerHTML = `<span class="good">Kağan:</span> Orta oyunda hedef seç: <b>zayıf piyon</b> veya <b>zayıf kare</b>. Taşlarını aktif tut.`;
-      return;
-    }
-    kaganText.innerHTML = `<span class="good">Kağan:</span> Son oyunda <b>piyon sür</b>, <b>şahı aktif et</b>, geçer piyon yarat.`;
+    kaganText.innerHTML = `<span class="good">Kağan:</span> ${cmd} ${opening!=="-" ? ` <span class="tag">Açılış: <b>${opening}</b></span>` : ""}`;
   }
 
-  function updateDedeAfterMove(san, qualityTag){
+  function dedeBaseByPhase(ply){
+    if(ply<=10) return pick(DEDE_OPEN);
+    if(ply<=30) return pick(DEDE_MID);
+    return pick(DEDE_END);
+  }
+
+  function updateDedeAfterMove(san, quality){
     const ply=game.sanHistory.length;
     const opening=detectOpening(game.openingMoves);
 
-    let base="";
-    if(ply<=10) base = pick(DEDE_TIPS_OPEN);
-    else if(ply<=30) base = pick(DEDE_TIPS_MID);
-    else base = pick(DEDE_TIPS_END);
+    const base = dedeBaseByPhase(ply);
+    const op = (opening!=="-") ? ` <span class="tag">Açılış izi: <b>${opening}</b></span>` : "";
 
-    const op = (opening!=="-") ? ` Açılış izi: <b>${opening}</b>.` : "";
-    dedeText.innerHTML = `<span class="warn">Dede:</span> <b>${san}</b> ${qualityTag} ${op}<br><span style="color:var(--muted)">${base}</span>`;
+    let tone = "";
+    if(quality==="good") tone = `<span class="good">${pick(DEDE_PRAISE)}</span>`;
+    else if(quality==="warn") tone = `<span class="warn">${pick(DEDE_WARN)}</span>`;
+    else tone = `<span class="bad">${pick(DEDE_BAD)}</span>`;
+
+    dedeText.innerHTML =
+      `<span class="warn">Dede:</span> <b>${san}</b> ${op}<br>` +
+      `${tone}<br><span style="color:var(--muted)">${base}</span>`;
   }
 
   // ====== move play + analysis ======
   function playMove(move,{byAI}){
     const san = game.sanFor(move);
 
-    // compare to a shallow best move for a simple “hata/iyi” etiketi
+    // basit “kalite” etiketi (shallow best ile kıyas)
     const depth = Math.min(2, chooseDepth(parseInt(aiLevelSel.value,10)));
     const bestRes = minimax(game.clone(), depth, -Infinity, Infinity);
     const beforeEval = game.evaluate();
@@ -946,13 +1121,12 @@
     const sideJustMoved = game.turn==='w' ? 'b' : 'w';
     const swing = (afterEval - bestEval) * (sideJustMoved==='w' ? 1 : -1);
 
-    let qualityTag = `<span class="warn">(dengeli)</span>`;
-    if(Math.abs(swing) < 0.15) qualityTag = `<span class="good">(iyi)</span>`;
-    else if(Math.abs(swing) < 0.45) qualityTag = `<span class="warn">(isabetsiz)</span>`;
-    else qualityTag = `<span class="bad">(ciddi hata)</span>`;
+    let quality = "warn";
+    if(Math.abs(swing) < 0.15) quality = "good";
+    else if(Math.abs(swing) < 0.55) quality = "warn";
+    else quality = "bad";
 
-    // Dede yorum
-    updateDedeAfterMove(san, qualityTag);
+    updateDedeAfterMove(san, quality);
 
     selected=null; legalFromSelected=[];
     render();
@@ -982,8 +1156,6 @@
       thinking=false;
       if(!mv){ render(); return; }
       playMove(mv,{byAI:true});
-      // AI hamlesinden sonra Kağan kısa komut
-      kaganText.innerHTML = `<span class="good">Kağan:</span> Düşman oynadı. <b>Merkez</b> + <b>gelişim</b> + <b>şah güvenliği</b>.`;
       render();
     }, 50);
   }
@@ -996,7 +1168,7 @@
     pendingPromotion=null;
     lastMoveLbl.textContent="-";
     kaganText.innerHTML=`<span class="good">Kağan:</span> ${pick(KAGAN_QUOTES)} <span class="warn">İlk hamleni yap.</span>`;
-    dedeText.innerHTML=`<span class="warn">Dede:</span> Hamle bekleniyor. <span style="color:var(--muted)">Evlat, önce gelişim; sonra hücum.</span>`;
+    dedeText.innerHTML=`<span class="warn">Dede:</span> <span style="color:var(--muted)">${pick(DEDE_OPEN)}</span>`;
     render();
   }
 
@@ -1004,21 +1176,22 @@
   resetBtn.addEventListener("click", reset);
   aiLevelSel.addEventListener("change", ()=>render());
 
-  // Splash controls
-  function closeSplash(){
+  // Splash controls (müzik: Başlat ile)
+  function closeSplash({withMusic}){
     splash.classList.add("hide");
-    // start with a Kağan message once
     kaganText.innerHTML=`<span class="good">Kağan:</span> ${pick(KAGAN_QUOTES)} <span class="warn">İlk hamleni yap.</span>`;
-    dedeText.innerHTML=`<span class="warn">Dede:</span> Hamle bekleniyor. <span style="color:var(--muted)">Merkez ve rok; ikisi de töredir.</span>`;
+    dedeText.innerHTML=`<span class="warn">Dede:</span> <span style="color:var(--muted)">${pick(DEDE_OPEN)}</span>`;
+    if(withMusic){
+      loadTrack(0);
+      tryPlay();
+    }
   }
-  startBtn.addEventListener("click", closeSplash);
-  skipBtn.addEventListener("click", closeSplash);
-  // also allow tap anywhere to start
-  splash.addEventListener("click", (e)=>{
-    if(e.target === splash) closeSplash();
-  });
+  startBtn.addEventListener("click", ()=>closeSplash({withMusic:true}));
+  startSilentBtn.addEventListener("click", ()=>closeSplash({withMusic:false}));
 
   // init
+  loadTrack(0);
+  stopMusic();
   render();
 })();
 </script>

@@ -702,4 +702,696 @@ function genPseudoMoves(state){
             if(dr===0 && dc===0) continue;
             const rr=r+dr, cc=c+dc;
             if(!inBoard(rr,cc)) continue;
-       
+            const to=rcToSq(rr,cc);
+            const tp=b[to];
+            if(!tp) push({from:sq,to,piece:p,cap:null,promo:null,ep:false,castle:false});
+            else if((us==="w" && isBlack(tp)) || (us==="b" && isWhite(tp)))
+              push({from:sq,to,piece:p,cap:tp,promo:null,ep:false,castle:false});
+          }
+        }
+
+        // castling
+        const canCastle = (side)=> state.castling[side];
+        const kingHome = us==="w" ? rcToSq(7,4) : rcToSq(0,4);
+        if(sq===kingHome && !inCheck(state, us)){
+          // king side
+          if(us==="w" && canCastle("K")){
+            const f1=rcToSq(7,5), g1=rcToSq(7,6), h1=rcToSq(7,7);
+            if(!b[f1] && !b[g1] && b[h1]==="R" && !attackedBy(state,f1,them) && !attackedBy(state,g1,them)){
+              push({from:sq,to:g1,piece:p,cap:null,promo:null,ep:false,castle:true, rookFrom:h1, rookTo:f1});
+            }
+          }
+          if(us==="b" && canCastle("k")){
+            const f8=rcToSq(0,5), g8=rcToSq(0,6), h8=rcToSq(0,7);
+            if(!b[f8] && !b[g8] && b[h8]==="r" && !attackedBy(state,f8,them) && !attackedBy(state,g8,them)){
+              push({from:sq,to:g8,piece:p,cap:null,promo:null,ep:false,castle:true, rookFrom:h8, rookTo:f8});
+            }
+          }
+          // queen side
+          if(us==="w" && canCastle("Q")){
+            const d1=rcToSq(7,3), c1=rcToSq(7,2), b1=rcToSq(7,1), a1=rcToSq(7,0);
+            if(!b[d1] && !b[c1] && !b[b1] && b[a1]==="R" && !attackedBy(state,d1,them) && !attackedBy(state,c1,them)){
+              push({from:sq,to:c1,piece:p,cap:null,promo:null,ep:false,castle:true, rookFrom:a1, rookTo:d1});
+            }
+          }
+          if(us==="b" && canCastle("q")){
+            const d8=rcToSq(0,3), c8=rcToSq(0,2), b8=rcToSq(0,1), a8=rcToSq(0,0);
+            if(!b[d8] && !b[c8] && !b[b8] && b[a8]==="r" && !attackedBy(state,d8,them) && !attackedBy(state,c8,them)){
+              push({from:sq,to:c8,piece:p,cap:null,promo:null,ep:false,castle:true, rookFrom:a8, rookTo:d8});
+            }
+          }
+        }
+        break;
+      }
+    }
+  }
+  return moves;
+}
+
+function makeMove(state, m){
+  const s = cloneState(state);
+  const b = s.board;
+
+  // reset EP
+  s.ep = null;
+
+  // halfmove clock
+  if(m.piece.toLowerCase()==="p" || m.cap) s.halfmove=0;
+  else s.halfmove++;
+
+  // move piece
+  b[m.to] = m.promo ? m.promo : m.piece;
+  b[m.from] = null;
+
+  // en passant capture
+  if(m.ep && m.capSq!=null){
+    b[m.capSq]=null;
+  }
+
+  // castling rook move
+  if(m.castle){
+    b[m.rookTo] = b[m.rookFrom];
+    b[m.rookFrom] = null;
+  }
+
+  // set EP square if double pawn push
+  if(m.dbl){
+    const {r:cR,c:cC}=sqToRC(m.to);
+    const epR = (s.turn==="w") ? cR+1 : cR-1;
+    s.ep = rcToSq(epR, cC);
+  }
+
+  // update castling rights
+  const from = m.from, to = m.to;
+  const moved = m.piece;
+  const cap = m.cap;
+
+  const revoke = (k)=>{ s.castling[k]=false; };
+
+  // king moved
+  if(moved==="K"){ revoke("K"); revoke("Q"); }
+  if(moved==="k"){ revoke("k"); revoke("q"); }
+
+  // rook moved from corner
+  if(moved==="R"){
+    if(from===rcToSq(7,0)) revoke("Q");
+    if(from===rcToSq(7,7)) revoke("K");
+  }
+  if(moved==="r"){
+    if(from===rcToSq(0,0)) revoke("q");
+    if(from===rcToSq(0,7)) revoke("k");
+  }
+  // rook captured on corner
+  if(cap==="R"){
+    if(to===rcToSq(7,0)) revoke("Q");
+    if(to===rcToSq(7,7)) revoke("K");
+  }
+  if(cap==="r"){
+    if(to===rcToSq(0,0)) revoke("q");
+    if(to===rcToSq(0,7)) revoke("k");
+  }
+
+  // advance move
+  s.turn = (s.turn==="w") ? "b" : "w";
+  if(s.turn==="w") s.fullmove++;
+
+  s.last = {from:m.from,to:m.to, san:""};
+  s.history.push(m);
+
+  return s;
+}
+
+function legalMoves(state){
+  const pseudo = genPseudoMoves(state);
+  const leg=[];
+  for(const m of pseudo){
+    const s2 = makeMove(state, m);
+    // illegal if our king in check after move
+    const us = (state.turn);
+    if(!inCheck(s2, us)){
+      leg.push(m);
+    }
+  }
+  return leg;
+}
+
+function gameEnd(state){
+  if(state.result) return state.result;
+
+  const moves = legalMoves(state);
+  const us = state.turn;
+  const inC = inCheck(state, us);
+
+  if(moves.length===0){
+    if(inC){
+      // checkmate
+      return us==="w" ? "0-1" : "1-0";
+    }
+    // stalemate
+    return "1/2-1/2";
+  }
+  // 50-move rule (basit)
+  if(state.halfmove>=100) return "1/2-1/2";
+
+  return null;
+}
+
+/* SAN (basit ama yeterli) */
+function sanForMove(state, m){
+  if(m.castle){
+    const {c}=sqToRC(m.to);
+    return (c===6) ? "O-O" : "O-O-O";
+  }
+  const b = state.board;
+  const piece = m.piece;
+  const isPawn = piece.toLowerCase()==="p";
+  const cap = !!m.cap || m.ep;
+
+  let s = "";
+  if(!isPawn){
+    s += piece.toUpperCase();
+  }else{
+    if(cap){
+      s += "abcdefgh"[sqToRC(m.from).c];
+    }
+  }
+  if(cap) s += "x";
+  s += algebra(m.to);
+
+  if(m.promo){
+    s += "=" + m.promo.toUpperCase();
+  }
+
+  // check / mate marks
+  const after = makeMove(state, m);
+  const end = gameEnd(after);
+  const them = after.turn; // side to move after
+  const check = inCheck(after, them);
+  if(end && (end==="1-0"||end==="0-1")){
+    s += "#";
+  }else if(check){
+    s += "+";
+  }
+  return s;
+}
+
+/* =========================
+   4) Değerlendirme + MiniMax
+========================= */
+function evalState(state){
+  const b=state.board;
+  let score=0;
+  for(const p of b){
+    if(!p) continue;
+    const v = pieceValue(p);
+    score += isWhite(p) ? v : -v;
+  }
+  // küçük tempo
+  score += (state.turn==="w") ? 5 : -5;
+  return score; // + beyaz iyi
+}
+
+function minimax(state, depth, alpha, beta){
+  const end = gameEnd(state);
+  if(end){
+    if(end==="1/2-1/2") return {score:0, move:null};
+    // kim kazandı?
+    if(end==="1-0") return {score: 999999, move:null};
+    if(end==="0-1") return {score: -999999, move:null};
+  }
+  if(depth===0){
+    return {score: evalState(state), move:null};
+  }
+
+  const moves = legalMoves(state);
+  // basit sıralama: yakalamalar önce
+  moves.sort((a,b)=> (b.cap?1:0)-(a.cap?1:0));
+
+  const maximizing = (state.turn==="w");
+  let bestMove=null;
+
+  if(maximizing){
+    let best=-Infinity;
+    for(const m of moves){
+      const s2=makeMove(state,m);
+      const res=minimax(s2, depth-1, alpha, beta);
+      if(res.score>best){
+        best=res.score; bestMove=m;
+      }
+      alpha=Math.max(alpha,best);
+      if(beta<=alpha) break;
+    }
+    return {score:best, move:bestMove};
+  }else{
+    let best=Infinity;
+    for(const m of moves){
+      const s2=makeMove(state,m);
+      const res=minimax(s2, depth-1, alpha, beta);
+      if(res.score<best){
+        best=res.score; bestMove=m;
+      }
+      beta=Math.min(beta,best);
+      if(beta<=alpha) break;
+    }
+    return {score:best, move:bestMove};
+  }
+}
+
+/* =========================
+   5) Açılış isimleri (mini)
+========================= */
+const OPENINGS = [
+  {seq:["e4","e5","Nf3","Nc6","Bb5"], name:"İspanyol Açılışı (Ruy Lopez)"},
+  {seq:["e4","c5"], name:"Sicilya Savunması"},
+  {seq:["d4","d5","c4"], name:"Vezir Gambiti"},
+  {seq:["e4","e5","Nf3","Nf6"], name:"Petrov Savunması"},
+  {seq:["d4","Nf6","c4","g6"], name:"Kral Hint Savunması"},
+];
+
+function openingName(sanList){
+  for(const o of OPENINGS){
+    if(sanList.length < o.seq.length) continue;
+    let ok=true;
+    for(let i=0;i<o.seq.length;i++){
+      if(sanList[i]!==o.seq[i]){ ok=false; break; }
+    }
+    if(ok) return o.name;
+  }
+  return "-";
+}
+
+/* =========================
+   6) Kağan & Dede metinleri
+========================= */
+const KAGAN_EMIR = [
+  "Er meydanı kuruldu; düzeni bozma.",
+  "Önce merkez! Sonra kanatlar.",
+  "Taşı boşa sürme; her adımın hükmü olsun.",
+  "Düşün, tart, vur; sonra ilerle.",
+  "Zayıf kareyi tut; ok gibi saplan.",
+  "Şahı koru; saldırıyı unutma.",
+  "Gereksiz hamle töreyi yorar.",
+  "Vakit dar ise sadelik kurtarır.",
+  "Güç birliği yap; taşlar yalnız kalmasın.",
+  "Zafer sabırla doğar; aceleyle ölür."
+];
+
+const DEDE_USLUP = [
+  "Yiğit, taşın gönlünü kırma; doğru yere kondur.",
+  "At gider, iz kalır; hamle gider, hüküm kalır.",
+  "Söz bir, ok bir; hamlen de bir olsun.",
+  "Kurt sürüsü dağılmaz; taşların dağılmasın.",
+  "Düşman uyur sanma; gözün açık olsun.",
+  "Yol uzunsa akıl kısadır; sade oyna, sağlam oyna.",
+  "Bir taşın kıymeti, durduğu yerle ölçülür.",
+  "Sabır kılıçtan keskindir; beklemesini bil.",
+  "Gönül ister saldırı; akıl ister tedbir.",
+  "Yiğit, mat getirmek yiğitliktir; pat düşmek talihsizliktir."
+];
+
+function pick(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+
+function dedeComment(san, evalBefore, evalAfter){
+  const swing = evalAfter - evalBefore;
+  let mood = "";
+  if(Math.abs(swing) < 40) mood = "Denge bozulmadı; ama yol uzun.";
+  else if(swing > 120) mood = "Güzel hamle! Rüzgâr senden yana döndü.";
+  else if(swing < -120) mood = "Aman yiğit… Bu hamle bir gedik açtı; dikkat et.";
+  else mood = "İşin özü: tedbirle yürü.";
+
+  return `${pick(DEDE_USLUP)}\n\nHamle: <b>${san}</b>. ${mood}`;
+}
+
+function kaganSuggest(bestSan){
+  return `Buyruk: <b>${bestSan}</b> yolunu aç.`;
+}
+
+/* =========================
+   7) UI: Tahta çizimi
+========================= */
+let S = initialState();
+let flipped = false;
+let selected = null;
+let legalCache = [];
+let sanHistory = [];
+
+const boardEl = $("board");
+
+function render(){
+  // game end check
+  const end = gameEnd(S);
+  if(end && !S.result){
+    S.result = end;
+    onGameFinished(end);
+  }
+
+  $("turn").textContent = (S.turn==="w") ? "Beyaz" : "Siyah";
+  $("status").textContent = S.result ? (S.result==="1/2-1/2" ? "Berabere" : "Oyun bitti") : "Hazır";
+
+  // eval
+  const ev = evalState(S)/100;
+  $("eval").textContent = (ev>=0?"+":"") + ev.toFixed(1);
+
+  $("opening").textContent = openingName(sanHistory);
+
+  // squares
+  boardEl.innerHTML = "";
+  legalCache = legalMoves(S);
+
+  const last = S.last ? {from:S.last.from,to:S.last.to} : null;
+
+  // if in check, mark king square
+  const inC = inCheck(S, S.turn);
+  const kingSq = inC ? findKing(S, S.turn) : null;
+
+  for(let view=0; view<64; view++){
+    // map view index to real sq (flip)
+    const vr = Math.floor(view/8), vc = view%8;
+    const r = flipped ? vr : (7 - vr);
+    const c = flipped ? (7 - vc) : vc;
+    const sq = rcToSq(r,c);
+
+    const isLight = (r+c)%2===0;
+    const d = document.createElement("div");
+    d.className = "sq " + (isLight ? "light":"dark");
+
+    if(selected===sq) d.classList.add("sel");
+    if(last && (sq===last.from || sq===last.to)) d.classList.add("last");
+    if(kingSq===sq) d.classList.add("check");
+
+    // move hints
+    if(selected!=null){
+      for(const m of legalCache){
+        if(m.from===selected && m.to===sq){
+          d.classList.add("hint");
+          break;
+        }
+      }
+    }
+
+    d.dataset.sq = String(sq);
+
+    const p = S.board[sq];
+    if(p){
+      const span = document.createElement("span");
+      span.className = "piece " + (isWhite(p) ? "w":"b");
+      span.textContent = PIECE_UNI[p];
+      d.appendChild(span);
+    }
+
+    d.addEventListener("click", onSquareClick, {passive:true});
+    boardEl.appendChild(d);
+  }
+
+  // last move label
+  $("lastMove").textContent = S.last ? S.last.san : "-";
+
+  // mini tags
+  $("kaganMini").textContent = (S.result ? "Tamam" : "Hazır");
+  $("dedeMini").textContent = (S.result ? "Hüküm" : "Bekler");
+
+  // Kağan “öneri” (oyuncuya hamle öner)
+  if(!S.result){
+    const best = getBestMoveForSide(S, S.turn, $("aiLevel").value==="off" ? 2 : 2);
+    if(best){
+      const bestSan = sanForMove(S, best);
+      $("kaganText").innerHTML = `${pick(KAGAN_EMIR)}<br><br>${kaganSuggest(bestSan)}`;
+    }
+  }
+}
+
+function onSquareClick(e){
+  if(S.result) return;
+
+  const sq = parseInt(e.currentTarget.dataset.sq, 10);
+  const p = S.board[sq];
+
+  // if selecting own piece
+  if(selected===null){
+    if(p && ((S.turn==="w" && isWhite(p)) || (S.turn==="b" && isBlack(p)))){
+      selected = sq;
+      render();
+    }
+    return;
+  }
+
+  // tap same square -> unselect
+  if(selected===sq){
+    selected = null;
+    render();
+    return;
+  }
+
+  // try move
+  const candidates = legalCache.filter(m=>m.from===selected && m.to===sq);
+  if(candidates.length===0){
+    // maybe switch selection to another own piece
+    if(p && ((S.turn==="w" && isWhite(p)) || (S.turn==="b" && isBlack(p)))){
+      selected = sq;
+      render();
+    }
+    return;
+  }
+
+  // if promotion: auto queen
+  let mv = candidates[0];
+  if(candidates.some(x=>x.promo)){
+    mv = candidates.find(x=>x.promo && x.promo.toLowerCase()==="q") || candidates[0];
+  }
+
+  playMove(mv);
+}
+
+function playMove(mv){
+  const evalBefore = evalState(S);
+  const san = sanForMove(S, mv);
+
+  const after = makeMove(S, mv);
+  after.last.san = san;
+  S = after;
+
+  sanHistory.push(san.replace(/[+#]$/,"")); // opening detection
+  $("lastMove").textContent = san;
+
+  const evalAfter = evalState(S);
+
+  $("dedeText").innerHTML = dedeComment(san, evalBefore, evalAfter);
+
+  selected = null;
+  render();
+
+  maybeAiReply();
+}
+
+function getBestMoveForSide(state, side, depth){
+  const s = cloneState(state);
+  s.turn = side;
+  const mm = minimax(s, depth, -Infinity, Infinity);
+  return mm.move;
+}
+
+function maybeAiReply(){
+  const lvl = $("aiLevel").value;
+  if(lvl==="off") return;
+  if(S.result) return;
+
+  // AI always plays black when enabled
+  if(S.turn!=="b") return;
+
+  let depth = 2;
+  if(lvl==="easy") depth = 2;
+  if(lvl==="mid") depth = 3;
+  if(lvl==="hard") depth = 4;
+
+  $("status").textContent = "AI düşünüyor…";
+  setTimeout(()=>{
+    const mm = minimax(S, depth, -Infinity, Infinity);
+    if(mm.move){
+      playMove(mm.move);
+    }else{
+      render();
+    }
+  }, 60);
+}
+
+/* =========================
+   8) Oyun bitişi + hedef sayacı
+========================= */
+function onGameFinished(result){
+  let msg="";
+  if(result==="1-0") msg="Beyaz MAT etti. Zafer beyazın.";
+  else if(result==="0-1") msg="Siyah MAT etti. Zafer siyahın.";
+  else msg="PAT / Berabere. Töre dengeyi yazdı.";
+
+  $("status").textContent = msg;
+  $("kaganText").innerHTML = `<span class="green">Hüküm verildi.</span> ${msg}`;
+  $("dedeText").innerHTML = `${pick(DEDE_USLUP)}<br><br><b>${msg}</b>`;
+
+  // günlük sayaç: biten oyun say
+  bumpTodayCount();
+}
+
+/* =========================
+   9) Butonlar
+========================= */
+$("flipBtn").addEventListener("click", ()=>{ flipped=!flipped; render(); });
+$("resetBtn").addEventListener("click", ()=>{
+  S = initialState();
+  selected=null;
+  sanHistory=[];
+  $("kaganText").innerHTML = `Er meydanı kuruldu. Börüler düzen alsın. İlk hamleni yap.`;
+  $("dedeText").innerHTML = `Yiğit, ilk hamleni beklerim. Hamle gelince sözüm de gelir.`;
+  render();
+});
+
+/* =========================
+   10) Günlük hedef (localStorage)
+========================= */
+const LS_GOAL = "bozkurt_goal";
+const LS_TODAY = "bozkurt_today";
+
+function loadGoal(){
+  const g = parseInt(localStorage.getItem(LS_GOAL)||"5",10);
+  return clamp(isNaN(g)?5:g, 1, 50);
+}
+function saveGoal(g){
+  localStorage.setItem(LS_GOAL, String(g));
+}
+function loadToday(){
+  const raw = localStorage.getItem(LS_TODAY);
+  const key = nowDayKey();
+  if(!raw) return {key, count:0};
+  try{
+    const obj = JSON.parse(raw);
+    if(obj.key!==key) return {key, count:0};
+    return obj;
+  }catch{ return {key, count:0}; }
+}
+function saveToday(obj){
+  localStorage.setItem(LS_TODAY, JSON.stringify(obj));
+}
+function bumpTodayCount(){
+  const t = loadToday();
+  t.count = (t.count||0) + 1;
+  saveToday(t);
+  updateGoalUI();
+}
+function updateGoalUI(){
+  const g = loadGoal();
+  const t = loadToday();
+  $("goalNum").textContent = g;
+  $("todayCount").textContent = t.count;
+  const pct = Math.floor((t.count / g) * 100);
+  $("goalPct").textContent = clamp(pct,0,999) + "%";
+  $("goalHint").textContent = (t.count>=g)
+    ? "Bugünün hedefi tamam. Yiğitlik tamamlandı."
+    : "Hedefe az kaldı. Töre sabır ister.";
+}
+$("goalMinus").addEventListener("click", ()=>{
+  const g = clamp(loadGoal()-1,1,50);
+  saveGoal(g); updateGoalUI();
+});
+$("goalPlus").addEventListener("click", ()=>{
+  const g = clamp(loadGoal()+1,1,50);
+  saveGoal(g); updateGoalUI();
+});
+
+/* =========================
+   11) YouTube (kontrollü liste)
+   - Sadece bizim ID’ler
+   - Şarkı bitince Next
+========================= */
+
+// ÖRNEK LİSTE (sen link verince ID’leri senin listeye göre güncellerim)
+const SONGS = [
+  // Buraya istediğin videoların ID'lerini koyacağız.
+  // Örnek ID'ler:
+  {title:"İstiklal Marşı (örnek)", id:"dQw4w9WgXcQ"},
+  {title:"Bozkurt / Göktürk tarzı (örnek)", id:"3JZ_D3ELwOQ"},
+  {title:"Dombra tarzı (örnek)", id:"V-_O7nl0Ii0"},
+];
+
+const songSelect = $("songSelect");
+for(const s of SONGS){
+  const o=document.createElement("option");
+  o.value=s.id;
+  o.textContent=s.title;
+  songSelect.appendChild(o);
+}
+
+let ytPlayer = null;
+let ytReady = false;
+
+function setYtStatus(t){ $("ytStatus").textContent = "Durum: " + t; }
+
+function loadYouTubeAPI(){
+  const tag=document.createElement("script");
+  tag.src="https://www.youtube.com/iframe_api";
+  document.body.appendChild(tag);
+}
+window.onYouTubeIframeAPIReady = function(){
+  ytPlayer = new YT.Player("yt", {
+    height:"0", width:"0",
+    videoId: SONGS[0]?.id || "",
+    playerVars:{
+      autoplay:0,
+      controls:0,
+      rel:0,
+      modestbranding:1,
+      playsinline:1
+    },
+    events:{
+      onReady: ()=>{
+        ytReady=true;
+        setYtStatus("Hazır (ilk kez ÇAL’a dokun)");
+      },
+      onStateChange: (ev)=>{
+        // 0 ended, 1 playing, 2 paused
+        if(ev.data===YT.PlayerState.ENDED){
+          playNextSong();
+        }else if(ev.data===YT.PlayerState.PLAYING){
+          setYtStatus("Çalıyor");
+        }else if(ev.data===YT.PlayerState.PAUSED){
+          setYtStatus("Duraklatıldı");
+        }
+      },
+      onError: ()=>{
+        setYtStatus("Hata (video erişilemiyor olabilir). Başka şarkı seç.");
+      }
+    }
+  });
+};
+
+function playSelected(){
+  if(!ytReady) return setYtStatus("Player hazır değil");
+  const id = songSelect.value;
+  ytPlayer.loadVideoById(id);
+  // Mobilde bazen yine de kullanıcı etkileşimi ister; bu buton zaten etkileşim
+}
+
+function pauseYt(){
+  if(!ytReady) return;
+  ytPlayer.pauseVideo();
+}
+
+function playNextSong(){
+  const cur = songSelect.selectedIndex;
+  const next = (cur+1) % SONGS.length;
+  songSelect.selectedIndex = next;
+  playSelected();
+}
+
+$("playBtn").addEventListener("click", playSelected);
+$("pauseBtn").addEventListener("click", pauseYt);
+$("nextBtn").addEventListener("click", playNextSong);
+
+loadYouTubeAPI();
+
+/* =========================
+   12) Başlat
+========================= */
+updateGoalUI();
+render();
+</script>
+</body>
+</html>

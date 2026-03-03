@@ -143,7 +143,10 @@
     border-radius:12px;
     background:rgba(0,0,0,.25);
   }
-
+  audio{
+    width:100%;
+    margin-top:10px;
+  }
   .box{
     background:rgba(0,0,0,.18);
     border:1px solid rgba(255,255,255,.10);
@@ -153,6 +156,7 @@
   }
   .labelLine{font-weight:900;margin-bottom:6px}
   .labelLine span{color:var(--muted);font-weight:700}
+  .tip{font-size:12.5px;line-height:1.4}
 </style>
 </head>
 
@@ -199,19 +203,46 @@
     </div>
 
     <div class="box">
-      <div class="labelLine">Türk Müzikleri</div>
+      <div class="labelLine">Müzik</div>
+
+      <!-- MOD SEÇİMİ: YouTube vs Telifsiz Yerel -->
       <div class="row">
-        <select id="playlistSelect" style="flex:1;min-width:220px"></select>
-        <button class="primary" id="playBtn">Çal</button>
-        <button id="nextBtn">Sonraki</button>
-        <button id="stopBtn">Durdur</button>
+        <span class="muted">Mod:</span>
+        <select id="musicMode">
+          <option value="local">Telifsiz Arka Plan (MP3/OGG)</option>
+          <option value="youtube">YouTube (Seçmeli)</option>
+        </select>
       </div>
-      <div class="muted" id="nowPlaying">Seç ve “Çal”a bas.</div>
-      <div style="margin-top:10px">
-        <div id="ytMount"></div>
+
+      <!-- YEREL AUDIO: Arka planda daha stabil -->
+      <audio id="bgAudio" controls preload="auto" loop>
+        <!-- Bu dosyaları repo'ya koy: /audio/epic1.mp3 (veya .ogg) -->
+        <source src="audio/epic1.mp3" type="audio/mpeg">
+        <source src="audio/epic1.ogg" type="audio/ogg">
+      </audio>
+
+      <!-- YOUTUBE BLOĞU -->
+      <div id="ytBlock" style="display:none">
+        <div class="row">
+          <select id="playlistSelect" style="flex:1;min-width:220px"></select>
+          <button class="primary" id="playBtn">Çal</button>
+          <button id="nextBtn">Sonraki</button>
+          <button id="stopBtn">Durdur</button>
+        </div>
+        <div class="muted" id="nowPlaying">Seç ve “Çal”a bas.</div>
+        <div style="margin-top:10px">
+          <div id="ytMount"></div>
+        </div>
+        <div class="muted tip" style="margin-top:8px">
+          Güvenlik: Liste <b>sabit</b>. Dışarıdan link girme yok, başka video açma yok.
+        </div>
+        <div class="muted tip" style="margin-top:6px">
+          Not: YouTube bazı telefonlarda arka plana geçince durabilir (platform kısıtı).
+        </div>
       </div>
-      <div class="muted" style="margin-top:8px;font-size:12.5px;line-height:1.4">
-        Güvenlik: Liste <b>sabit</b>. Dışarıdan link girme yok, başka video açma yok.
+
+      <div class="muted tip" style="margin-top:8px">
+        Arka planda kesintisiz müzik için <b>Telifsiz Arka Plan</b> modunu kullan.
       </div>
     </div>
   </div>
@@ -226,6 +257,7 @@
 ========================= */
 const PIECE_UNI = { p:"♟", r:"♜", n:"♞", b:"♝", q:"♛", k:"♚" };
 const PIECE_TR  = { p:"Piyon", n:"At", b:"Fil", r:"Kale", q:"Vezir", k:"Şah" };
+const VAL = { p:100, n:320, b:330, r:500, q:900, k:0 };
 
 const game = new Chess();
 const boardEl = document.getElementById("board");
@@ -296,9 +328,7 @@ function renderBoard(){
       if(selected){
         const moves = game.moves({square:selected, verbose:true});
         for(const m of moves){
-          if(m.to === name){
-            sq.classList.add(m.captured ? "cap" : "hint");
-          }
+          if(m.to === name) sq.classList.add(m.captured ? "cap" : "hint");
         }
       }
 
@@ -315,15 +345,10 @@ function renderBoard(){
     }
   }
 
-  if(game.in_checkmate()){
-    stateLine.textContent = "MAT";
-  } else if(game.in_draw()){
-    stateLine.textContent = "PAT / Beraberlik";
-  } else if(game.in_check()){
-    stateLine.textContent = "ŞAH!";
-  } else {
-    stateLine.textContent = "Hazır";
-  }
+  if(game.in_checkmate()) stateLine.textContent = "MAT";
+  else if(game.in_draw()) stateLine.textContent = "PAT / Beraberlik";
+  else if(game.in_check()) stateLine.textContent = "ŞAH!";
+  else stateLine.textContent = "Hazır";
 }
 
 function onSquareClick(name){
@@ -331,9 +356,7 @@ function onSquareClick(name){
 
   if(!selected){
     const p = game.get(name);
-    if(p && p.color === game.turn()){
-      selected = name;
-    }
+    if(p && p.color === game.turn()) selected = name;
     renderBoard();
     return;
   }
@@ -351,12 +374,10 @@ function onSquareClick(name){
     } else {
       dedeBox.textContent = pick(DEDE_NORMAL);
     }
-
     if(game.in_check()){
       dedeBox.textContent = pick(DEDE_CHECK);
       playCheckSound();
     }
-
     if(game.in_checkmate()){
       const winner = (game.turn() === "w") ? "Siyah" : "Beyaz";
       dedeBox.textContent = (winner === "Beyaz") ? pick(DEDE_MATE_WIN) : pick(DEDE_MATE_LOSE);
@@ -367,22 +388,14 @@ function onSquareClick(name){
       incrementGames();
     }
 
-    // hamle sonrası Kağan yeni öneri söylesin
     updateKaganSuggestion();
   }
 
   renderBoard();
 }
 
-/* =========================
-   KAĞAN HAMLE ÖNERİSİ (mini-analiz)
-   - 2 ply (sen/ rakip) alfa-beta
-   - materyal + basit konumsal
-========================= */
-const VAL = { p:100, n:320, b:330, r:500, q:900, k:0 };
-
+/* ============ Kağan hamle önerisi (2 ply) ============ */
 function evalBoard(ch){
-  // White avantajı (+), Black avantajı (-)
   const b = ch.board();
   let score = 0;
   for(let r=0;r<8;r++){
@@ -391,10 +404,9 @@ function evalBoard(ch){
       if(!p) continue;
       let v = VAL[p.type];
 
-      // basit konumsal: merkeze yakınlık bonusu (n,b,q için az; p için biraz)
       const dr = Math.abs(3.5 - r);
       const dc = Math.abs(3.5 - c);
-      const center = 7 - (dr+dc); // 0..7
+      const center = 7 - (dr+dc);
 
       if(p.type === "p") v += center*2;
       else if(p.type === "n" || p.type === "b") v += center*3;
@@ -403,23 +415,15 @@ function evalBoard(ch){
       score += (p.color === "w") ? v : -v;
     }
   }
-  // şah çekiliyse küçük ceza
-  if(ch.in_check()){
-    score += (ch.turn()==="w") ? -25 : +25;
-  }
+  if(ch.in_check()) score += (ch.turn()==="w") ? -25 : +25;
   return score;
 }
 
 function alphabeta(ch, depth, alpha, beta, maximizingWhite){
   if(depth === 0 || ch.in_checkmate() || ch.in_draw()){
-    // mat durumlarını güçlü değerlendir
-    if(ch.in_checkmate()){
-      // sıra kimdeyse o mat olmuş demektir
-      return (ch.turn()==="w") ? -99999 : 99999;
-    }
+    if(ch.in_checkmate()) return (ch.turn()==="w") ? -99999 : 99999;
     return evalBoard(ch);
   }
-
   const moves = ch.moves({verbose:true});
 
   if(maximizingWhite){
@@ -447,17 +451,14 @@ function alphabeta(ch, depth, alpha, beta, maximizingWhite){
   }
 }
 
-function buildPhrase(moveVerbose){
-  // moveVerbose: {from,to,piece, captured?, promotion?, san}
-  const pieceName = PIECE_TR[moveVerbose.piece] || "Taş";
-  const to = moveVerbose.to;
-  // Türkçe: "Atı f3'e sür."
-  const suffix = "’e"; // basit; istersen ünlü uyumu yaparız
+function buildPhrase(m){
+  const pieceName = PIECE_TR[m.piece] || "Taş";
+  const to = m.to;
   let extra = "";
-  if(moveVerbose.captured) extra = " (taş al)";
-  if(moveVerbose.san && moveVerbose.san.includes("+")) extra = " (şah)";
-  if(moveVerbose.san && moveVerbose.san.includes("#")) extra = " (mat)";
-  return `${pieceName} ${to}${suffix} sür${extra}.`;
+  if(m.captured) extra = " (taş al)";
+  if(m.san && m.san.includes("+")) extra = " (şah)";
+  if(m.san && m.san.includes("#")) extra = " (mat)";
+  return `${pieceName} ${to}’e sür${extra}.`;
 }
 
 function updateKaganSuggestion(){
@@ -466,15 +467,12 @@ function updateKaganSuggestion(){
     kaganMoveEl.textContent = "";
     return;
   }
-
-  // sıra kimdeyse onun için öneri üret
   const maximizingWhite = (game.turn() === "w");
   const moves = game.moves({verbose:true});
 
   let bestMove = null;
   let bestVal = maximizingWhite ? -Infinity : Infinity;
 
-  // 2 ply: ben + rakip
   for(const m of moves){
     game.move(m);
     const val = alphabeta(game, 1, -Infinity, Infinity, !maximizingWhite);
@@ -488,12 +486,7 @@ function updateKaganSuggestion(){
   }
 
   if(bestMove){
-    suggest = {
-      from: bestMove.from,
-      to: bestMove.to,
-      san: bestMove.san,
-      phrase: buildPhrase(bestMove)
-    };
+    suggest = { from: bestMove.from, to: bestMove.to, san: bestMove.san, phrase: buildPhrase(bestMove) };
     kaganMoveEl.textContent = `Kağan buyruğu: ${suggest.phrase}  (${suggest.san})`;
   } else {
     suggest = null;
@@ -562,8 +555,13 @@ saveGoalBtn.addEventListener("click", ()=>{
 updateProgress();
 
 /* =========================
-   MÜZİK (otomatik sonraki)
+   MÜZİK: HYBRID (LOCAL + YT)
+   - Local audio arka planda daha stabil
 ========================= */
+const musicMode = document.getElementById("musicMode");
+const bgAudio = document.getElementById("bgAudio");
+const ytBlock = document.getElementById("ytBlock");
+
 const TURK_PLAYLIST = [
   { title:"İstiklal Marşı", id:"fhIIU_a6bv8" },
   { title:"Enver Paşa - Hoş Gelişler Ola", id:"agveHbFsogM" },
@@ -639,6 +637,30 @@ playBtn.addEventListener("click", playSelected);
 nextBtn.addEventListener("click", ()=>playNext(false));
 stopBtn.addEventListener("click", stopMusic);
 
+function setModeUI(){
+  const mode = musicMode.value;
+  if(mode === "local"){
+    ytBlock.style.display = "none";
+    // youtube varsa durdur
+    try{ stopMusic(); }catch(e){}
+    // local audio göster
+    bgAudio.style.display = "block";
+    // kullanıcı bir kez başlatınca arka planda daha stabil
+    bgAudio.play().catch(()=>{ /* mobil engel olabilir */ });
+  }else{
+    bgAudio.pause();
+    bgAudio.currentTime = 0;
+    bgAudio.style.display = "none";
+    ytBlock.style.display = "block";
+  }
+}
+musicMode.addEventListener("change", setModeUI);
+setModeUI();
+
+/* ====== Arka plana gidince local audio'yu zorla durdurma yok ======
+   YouTube için tarayıcı/OS durdurabilir; local audio daha stabil.
+*/
+
 /* =========================
    SES EFEKTLERİ
 ========================= */
@@ -653,14 +675,4 @@ function beep(freq, dur){
   o.start();
   o.stop(ctx.currentTime + dur);
 }
-function playMoveSound(){ beep(280, 0.08); }
-function playCaptureSound(){ beep(200, 0.10); }
-function playCheckSound(){ beep(560, 0.12); }
-function playMateSound(){ beep(140, 0.40); }
-
-/* İlk öneri */
-updateKaganSuggestion();
-renderBoard();
-</script>
-</body>
-</html>
+function 
